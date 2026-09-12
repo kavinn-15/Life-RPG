@@ -1,4 +1,5 @@
 import { leaderboard } from '../data/questData';
+import { useGame } from '../state/GameContext';
 
 export function SpotlightPanel() {
   return (
@@ -37,6 +38,14 @@ export function SpotlightPanel() {
 }
 
 export function LeaderboardPanel({ playerLevel, playerXp }) {
+  const { state } = useGame();
+  const initials = (state?.playerName || 'You')
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
   return (
     <div className="bg-surface-container-lowest rounded-2xl p-6 shadow-sm flex flex-col">
       <div className="flex items-center justify-between mb-4">
@@ -73,20 +82,22 @@ export function LeaderboardPanel({ playerLevel, playerXp }) {
         <div className="flex items-center justify-between py-3 bg-primary-fixed/50 -mx-6 px-6 rounded-xl mt-1">
           <div className="flex items-center gap-3">
             <div className="w-6 h-6 rounded-full bg-primary text-on-primary flex items-center justify-center font-label-caps text-label-caps font-extrabold">
-              10
+              5
             </div>
             <div className="w-9 h-9 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-sm">
-              AV
+              {initials}
             </div>
             <div className="flex flex-col">
-              <span className="font-label-lg text-label-lg text-on-surface font-extrabold">Alex (You)</span>
+              <span className="font-label-lg text-label-lg text-on-surface font-extrabold">
+                {state?.playerName || 'Adventurer'} (You)
+              </span>
               <span className="font-label-caps text-label-caps text-primary font-bold">
-                LVL {playerLevel} • The Builder
+                LVL {playerLevel ?? state?.level ?? 1} • {state?.title || 'Adventurer'}
               </span>
             </div>
           </div>
           <span className="font-label-md text-label-md font-extrabold text-primary">
-            {playerXp.toLocaleString()} XP
+            {(playerXp ?? state?.totalXp ?? 0).toLocaleString()} XP
           </span>
         </div>
       </div>

@@ -1,14 +1,15 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGame } from '../state/GameContext';
+import * as questService from '../services/questService';
 
 const DOMAINS = [
-  { key: 'finance', label: 'Finance', icon: 'account_balance' },
-  { key: 'code', label: 'Code', icon: 'code' },
-  { key: 'sports', label: 'Sports', icon: 'sports_soccer' },
-  { key: 'reading', label: 'Reading', icon: 'menu_book' },
-  { key: 'mind', label: 'Mind', icon: 'self_improvement' },
-  { key: 'fitness', label: 'Fitness', icon: 'fitness_center' },
+  { key: 'finance', label: 'Finance', icon: 'account_balance', statKey: 'discipline' },
+  { key: 'code', label: 'Code', icon: 'code', statKey: 'coding' },
+  { key: 'sports', label: 'Sports', icon: 'sports_soccer', statKey: 'strength' },
+  { key: 'reading', label: 'Reading', icon: 'menu_book', statKey: 'wisdom' },
+  { key: 'mind', label: 'Mind', icon: 'self_improvement', statKey: 'discipline' },
+  { key: 'fitness', label: 'Fitness', icon: 'fitness_center', statKey: 'vitality' },
 ];
 
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard', 'Epic'];
@@ -17,26 +18,68 @@ const TIMES = ['15m', '30m', '60m', '120m'];
 const DIFFICULTY_MULT = { Easy: 0.6, Medium: 1, Hard: 1.6, Epic: 2.4 };
 const TIME_MULT = { '15m': 0.5, '30m': 0.75, '60m': 1, '120m': 1.6 };
 
-export default function QuestForgePanel() {
+export default function QuestForgePanel({ onQuestForged }) {
   const { grantRewards, pushToast } = useGame();
   const [title, setTitle] = useState('Draft 20-Page Pitch Deck for Series A');
   const [domain, setDomain] = useState('finance');
   const [difficulty, setDifficulty] = useState('Medium');
   const [time, setTime] = useState('60m');
   const [minted, setMinted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
 
   const baseXp = 90;
   const baseGold = 70;
   const mult = DIFFICULTY_MULT[difficulty] * TIME_MULT[time];
   const xp = Math.round(baseXp * mult);
   const gold = Math.round(baseGold * mult);
-  const activeDomain = DOMAINS.find((d) => d.key === domain);
+  const activeDomain = DOMAINS.find((d) => d.key === domain) || DOMAINS[0];
 
-  const handleForge = () => {
+  const handleForge = async () => {
+    if (submitting) return;
+    setSubmitting(true);
     setMinted(true);
-    grantRewards({ xp, gold });
-    pushToast(`Quest forged: ${title || 'Untitled Quest'} · +${xp} XP`, 'auto_awesome');
-    setTimeout(() => setMinted(false), 1500);
+
+    const questTitle = title.trim() || 'Custom Forged Quest';
+    const payload = {
+      title: questTitle,
+      description: `Targeted session in ${activeDomain.label} with estimated time commitment of ${time}.`,
+      domain: activeDomain.label,
+      domainId: activeDomain.key,
+      difficulty,
+      xp,
+      gold,
+      statKey: activeDomain.statKey,
+      statAmount: 3,
+      timeRemaining: `${time} Session`,
+      icon: activeDomain.icon,
+    };
+
+    try {
+      const created = await questService.createQuest(payload);
+      grantRewards({ xp: 20, gold: 10 });
+      pushToast(`Quest forged: ${created.title} · +${xp} XP`, 'auto_awesome');
+      if (onQuestForged) {
+        onQuestForged(created);
+      }
+    } catch (err) {
+      console.warn('Backend createQuest error, fallback to local:', err);
+      grantRewards({ xp, gold });
+      pushToast(`Quest forged: ${questTitle} · +${xp} XP`, 'auto_awesome');
+      if (onQuestForged) {
+        onQuestForged({
+          id: `quest-${Date.now()}`,
+          ...payload,
+          domainClass: 'bg-primary-container text-on-primary',
+          difficultyClass: 'bg-surface-variant text-on-surface-variant',
+          progress: 0,
+          milestones: [],
+          status: 'ACTIVE',
+        });
+      }
+    } finally {
+      setSubmitting(false);
+      setTimeout(() => setMinted(false), 1500);
+    }
   };
 
   return (

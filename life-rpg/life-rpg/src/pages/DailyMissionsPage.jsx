@@ -18,23 +18,10 @@ function formatCountdown(ms) {
   return `${h}:${m}:${s}`;
 }
 
-// Derives {current, target} for a mission from live GameContext state where
-// a real counter exists, falling back to the mission's own mock data
-// otherwise (see comment in dailyMissionData.js).
-function deriveProgress(mission, state) {
-  if (mission.source === 'dailyQuestsRatio') {
-    return { current: state.questsCompletedToday, target: state.questsTotalToday };
-  }
-  if (mission.source) {
-    return { current: state[mission.source] ?? 0, target: mission.target };
-  }
-  return { current: mission.mockCurrent ?? 0, target: mission.target };
-}
-
 function SkeletonList() {
   return (
     <div className="flex flex-col gap-3">
-      {Array.from({ length: 5 }).map((_, i) => (
+      {Array.from({ length: 6 }).map((_, i) => (
         <div key={i} className="bg-surface-container-lowest rounded-2xl p-5 shadow-sm flex items-center gap-4">
           <div className="w-12 h-12 rounded-2xl bg-surface-container animate-pulse shrink-0" />
           <div className="flex-1 flex flex-col gap-2">
@@ -53,69 +40,121 @@ function EmptyState() {
       <span className="material-symbols-outlined text-4xl text-outline">event_available</span>
       <h3 className="font-headline-sm text-headline-sm text-on-surface">No missions available</h3>
       <p className="font-body-md text-body-md text-on-surface-variant max-w-sm">
-        The Quartermaster has nothing queued for you today — check back at dawn for a fresh board.
+        The Quartermaster has nothing queued for you right now — check back after adding active quests.
       </p>
     </div>
   );
 }
 
-function MissionCard({ mission, current, target, countdown }) {
-  const pct = target > 0 ? Math.min(100, Math.round((current / target) * 100)) : 0;
+function MissionCard({ mission, onClaim, claiming }) {
+  const current = mission.current ?? 0;
+  const target = Math.max(1, mission.target ?? 1);
+  const pct = Math.min(100, Math.round((current / target) * 100));
   const complete = current >= target;
+  const isClaimed = Boolean(mission.claimed);
 
   return (
-    <div className="bg-surface-container-lowest rounded-2xl p-5 shadow-sm flex flex-col sm:flex-row sm:items-center gap-4">
+    <div className="bg-surface-container-lowest rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow flex flex-col sm:flex-row sm:items-center gap-4">
       <div
-        className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${
-          complete ? 'bg-tertiary-container text-on-tertiary' : 'bg-primary-container text-on-primary'
+        className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 transition-colors ${
+          isClaimed
+            ? 'bg-tertiary-container text-on-tertiary'
+            : complete
+            ? 'bg-primary-container text-on-primary ring-2 ring-primary/40'
+            : 'bg-surface-container-high text-on-surface-variant'
         }`}
       >
-        <span className="material-symbols-outlined fill text-xl">{complete ? 'check_circle' : mission.icon}</span>
+        <span className="material-symbols-outlined fill text-xl">
+          {isClaimed ? 'verified' : complete ? 'check_circle' : mission.icon || 'task_alt'}
+        </span>
       </div>
 
       <div className="flex-1 flex flex-col gap-2 min-w-0">
         <div className="flex items-center justify-between gap-2 flex-wrap">
-          <span className="font-label-lg text-label-lg text-on-surface">{mission.title}</span>
-          <Chip className={complete ? 'text-tertiary bg-tertiary-fixed' : 'text-outline bg-surface-container'}>
-            {complete ? 'Complete' : `${current}/${target}`}
+          <div className="flex items-center gap-2">
+            <span className="font-label-lg text-label-lg text-on-surface">{mission.title}</span>
+            {complete && !isClaimed && (
+              <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-primary text-on-primary animate-pulse">
+                Ready to Claim!
+              </span>
+            )}
+          </div>
+          <Chip
+            className={
+              isClaimed
+                ? 'text-tertiary bg-tertiary-fixed font-bold'
+                : complete
+                ? 'text-primary bg-primary-fixed font-bold'
+                : 'text-outline bg-surface-container'
+            }
+          >
+            {isClaimed ? 'Claimed' : complete ? 'Complete' : `${current}/${target}`}
           </Chip>
         </div>
         <p className="font-body-sm text-body-sm text-on-surface-variant">{mission.description}</p>
-        <ProgressBar pct={pct} className={complete ? 'bg-tertiary-container' : 'bg-primary-container'} />
+        <ProgressBar
+          pct={pct}
+          className={
+            isClaimed ? 'bg-tertiary-container' : complete ? 'bg-primary-container' : 'bg-surface-container-high'
+          }
+        />
       </div>
 
-      <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 shrink-0 sm:w-36">
+      <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-2 shrink-0 sm:w-44">
         <div className="flex items-center gap-1.5">
-          <Chip className="text-primary bg-primary-fixed">+{mission.rewardXp} XP</Chip>
+          <Chip className="text-primary bg-primary-fixed font-bold">+{mission.rewardXp} XP</Chip>
           {mission.rewardGold > 0 && (
-            <Chip className="text-secondary bg-secondary-fixed">+{mission.rewardGold} Gold</Chip>
+            <Chip className="text-secondary bg-secondary-fixed font-bold">+{mission.rewardGold} Gold</Chip>
           )}
         </div>
-        <span className="flex items-center gap-1 font-label-caps text-label-caps text-outline uppercase">
-          <span className="material-symbols-outlined text-[14px]">schedule</span>
-          {complete ? 'Claimed at reset' : countdown}
-        </span>
+
+        {complete && !isClaimed ? (
+          <button
+            onClick={() => onClaim(mission.id)}
+            disabled={claiming}
+            className="px-4 py-1.5 rounded-full bg-primary text-on-primary font-label-md text-label-md font-bold shadow-md hover:shadow-lg hover:scale-105 active:scale-95 transition-all flex items-center gap-1 cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-sm">redeem</span>
+            <span>{claiming ? 'Claiming...' : 'Claim Reward'}</span>
+          </button>
+        ) : (
+          <span className="flex items-center gap-1 font-label-caps text-label-caps text-outline uppercase">
+            <span className="material-symbols-outlined text-[14px]">
+              {isClaimed ? 'done_all' : 'schedule'}
+            </span>
+            {isClaimed ? 'Claimed' : 'Resets at midnight'}
+          </span>
+        )}
       </div>
     </div>
   );
 }
 
 export default function DailyMissionsPage() {
-  const { state } = useGame();
+  const { state, grantRewards, pushToast } = useGame();
   const [loading, setLoading] = useState(true);
   const [missions, setMissions] = useState([]);
+  const [claimingId, setClaimingId] = useState(null);
   const [countdown, setCountdown] = useState(formatCountdown(msUntilMidnight()));
 
+  const fetchMissions = () => {
+    return dailyMissionService
+      .getDailyMissions()
+      .then((data) => {
+        if (Array.isArray(data) && data.length > 0) {
+          setMissions(data);
+        }
+      })
+      .catch((err) => {
+        console.warn('Could not load live daily missions from server:', err);
+      })
+      .finally(() => {
+        setLoading(false);
+      });
+  };
+
   useEffect(() => {
-    let cancelled = false;
-    dailyMissionService.getDailyMissions().then((data) => {
-      if (cancelled) return;
-      setMissions(data);
-      setLoading(false);
-    });
-    return () => {
-      cancelled = true;
-    };
+    fetchMissions();
   }, []);
 
   useEffect(() => {
@@ -123,12 +162,78 @@ export default function DailyMissionsPage() {
     return () => clearInterval(interval);
   }, []);
 
-  const derived = useMemo(
-    () => missions.map((m) => ({ mission: m, ...deriveProgress(m, state) })),
-    [missions, state]
-  );
-  const completedCount = derived.filter((d) => d.current >= d.target).length;
-  const totalXp = missions.reduce((sum, m) => sum + m.rewardXp, 0);
+  const handleClaim = async (missionId) => {
+    if (claimingId) return;
+    setClaimingId(missionId);
+    try {
+      const res = await dailyMissionService.claimDailyMission(missionId);
+      const mission = missions.find((m) => m.id === missionId);
+      const xp = res?.rewardXp ?? mission?.rewardXp ?? 0;
+      const gold = res?.rewardGold ?? mission?.rewardGold ?? 0;
+
+      grantRewards({ xp, gold, questTitle: mission?.title ? `Mission: ${mission.title}` : 'Daily Mission' });
+      pushToast(`Claimed ${mission?.title || 'Daily Mission'}! (+${xp} XP, +${gold} Gold)`, 'military_tech');
+
+      setMissions((prev) =>
+        prev.map((m) => (m.id === missionId ? { ...m, claimed: true, completed: true } : m))
+      );
+    } catch (err) {
+      console.warn('Backend claim error, updating locally:', err);
+      const mission = missions.find((m) => m.id === missionId);
+      if (mission) {
+        grantRewards({
+          xp: mission.rewardXp,
+          gold: mission.rewardGold,
+          questTitle: `Mission: ${mission.title}`,
+        });
+        pushToast(`Claimed ${mission.title}! (+${mission.rewardXp} XP, +${mission.rewardGold} Gold)`, 'military_tech');
+        setMissions((prev) =>
+          prev.map((m) => (m.id === missionId ? { ...m, claimed: true, completed: true } : m))
+        );
+      }
+    } finally {
+      setClaimingId(null);
+    }
+  };
+
+  // Dynamically overlay live state if player completed quests in the current session
+  const dynamicMissions = useMemo(() => {
+    return missions.map((m) => {
+      let current = m.current ?? 0;
+      const target = Math.max(1, m.target ?? 1);
+
+      // If user completed quests today in current session, ensure counter is at least that
+      const id = (m.id || '').toLowerCase();
+      const source = m.source || '';
+      if (
+        source === 'questsCompletedToday' ||
+        source === 'activeQuests' ||
+        source === 'dailyQuestsRatio' ||
+        id.includes('threat') ||
+        id.includes('complete-daily') ||
+        id.includes('full-house') ||
+        id.includes('3-quests')
+      ) {
+        if (state?.questsCompletedToday !== undefined) {
+          current = Math.max(current, state.questsCompletedToday);
+        }
+      }
+      if (id.includes('flame') && state?.questsCompletedToday > 0) {
+        current = Math.max(current, 1);
+      }
+
+      const completed = current >= target;
+      return {
+        ...m,
+        current,
+        target,
+        completed: completed || Boolean(m.completed),
+      };
+    });
+  }, [missions, state]);
+
+  const completedCount = dynamicMissions.filter((d) => d.completed || d.claimed).length;
+  const totalXp = dynamicMissions.reduce((sum, m) => sum + (m.rewardXp || 0), 0);
 
   return (
     <>
@@ -142,15 +247,15 @@ export default function DailyMissionsPage() {
             Daily Missions
           </h1>
           <p className="font-body-lg text-body-lg text-on-surface-variant mt-0.5 max-w-xl">
-            A fresh set of bite-sized goals every day. Clear them all before the board resets at midnight.
+            A fresh set of bite-sized goals every day synced to your actual quest achievements. Complete and claim rewards before midnight reset.
           </p>
         </div>
-        <div className="flex items-center gap-6 shrink-0">
+        <div className="flex items-center gap-6 shrink-0 flex-wrap">
           <div className="flex items-center gap-2">
             <span className="material-symbols-outlined fill text-tertiary-container text-2xl">check_circle</span>
             <div className="flex flex-col leading-tight">
               <span className="font-headline-sm text-headline-sm text-on-surface font-extrabold">
-                {completedCount} / {missions.length || '—'}
+                {completedCount} / {dynamicMissions.length || '—'}
               </span>
               <span className="font-label-caps text-label-caps text-outline uppercase">Missions Complete</span>
             </div>
@@ -174,12 +279,17 @@ export default function DailyMissionsPage() {
 
       {loading ? (
         <SkeletonList />
-      ) : missions.length === 0 ? (
+      ) : dynamicMissions.length === 0 ? (
         <EmptyState />
       ) : (
         <div className="flex flex-col gap-3">
-          {derived.map(({ mission, current, target }) => (
-            <MissionCard key={mission.id} mission={mission} current={current} target={target} countdown={countdown} />
+          {dynamicMissions.map((m) => (
+            <MissionCard
+              key={m.id}
+              mission={m}
+              onClaim={handleClaim}
+              claiming={claimingId === m.id}
+            />
           ))}
         </div>
       )}

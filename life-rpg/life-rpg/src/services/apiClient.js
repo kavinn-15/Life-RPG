@@ -92,37 +92,11 @@ function invalidateCacheForMutation(path) {
 }
 
 /**
- * Ensures a valid JWT token is available. If none is stored,
- * automatically authenticates as demo user Alex Mercer.
+ * Retrieves the stored JWT token if available.
  */
-let authInitPromise = null;
 export async function ensureAuth() {
   const token = getToken();
-  if (token) return token;
-
-  if (!authInitPromise) {
-    authInitPromise = (async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/auth/login`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email: 'alex@liferpg.app', password: 'rpgmaster123' }),
-        });
-        const data = await res.json();
-        if (data.success && data.data?.token) {
-          setToken(data.data.token);
-          setStoredUser(data.data.user);
-          return data.data.token;
-        }
-      } catch (err) {
-        console.warn('Auto demo-auth failed:', err);
-      } finally {
-        authInitPromise = null;
-      }
-      return null;
-    })();
-  }
-  return authInitPromise;
+  return token || null;
 }
 
 /**

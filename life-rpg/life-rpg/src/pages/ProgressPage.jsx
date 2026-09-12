@@ -133,9 +133,14 @@ export default function ProgressPage() {
   const currentXpData = xpTimeframe === 'weekly' ? weekly : monthly;
   const currentKey = xpTimeframe === 'weekly' ? 'week' : 'month';
 
-  const totalHistoricalXp = weekly.reduce((sum, w) => sum + w.xp, 0);
-  const totalHistoricalGold = weekly.reduce((sum, w) => sum + w.gold, 0);
-  const completionRate = completionStats?.completionRatePct || 89.5;
+  const totalHistoricalXp = weekly.reduce((sum, w) => sum + (w.xp || 0), 0) || (state?.totalXp ?? state?.xp ?? 0);
+  const totalHistoricalGold = weekly.reduce((sum, w) => sum + (w.gold || 0), 0) || (state?.gold ?? 0);
+  const completionRate = completionStats?.completionRatePct ?? (completionStats?.totalAssigned > 0 ? Math.round((completionStats.totalCompleted / completionStats.totalAssigned) * 100) : 0);
+
+  // Dynamic velocity comparison
+  const lastWeekXp = weekly.length > 0 ? (weekly[weekly.length - 1]?.xp || 0) : 0;
+  const prevWeekXp = weekly.length > 1 ? (weekly[weekly.length - 2]?.xp || 0) : 0;
+  const xpVelocityPct = prevWeekXp > 0 ? Math.round(((lastWeekXp - prevWeekXp) / prevWeekXp) * 100) : (lastWeekXp > 0 ? 100 : 0);
 
   return (
     <div className="flex flex-col gap-8 pb-12">
@@ -164,7 +169,7 @@ export default function ProgressPage() {
           <button
             onClick={loadData}
             title="Refresh Telemetry"
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-lowest text-on-surface-variant hover:text-on-surface font-label-md text-label-md shadow-sm border border-outline/10 hover:shadow-md transition-all"
+            className="flex items-center gap-2 px-4 py-2 rounded-full bg-surface-container-lowest text-on-surface-variant hover:text-on-surface font-label-md text-label-md shadow-sm border border-outline/10 hover:shadow-md transition-all cursor-pointer"
           >
             <span className="material-symbols-outlined text-sm">sync</span>
             <span>Sync Data</span>
@@ -177,18 +182,18 @@ export default function ProgressPage() {
         {/* Metric 1: Total Recorded XP */}
         <div className="bg-surface-container-lowest p-5 rounded-2xl shadow-sm border border-outline/5 flex flex-col justify-between">
           <div className="flex items-center justify-between">
-            <span className="font-label-caps text-label-caps text-outline uppercase">12-Week Velocity</span>
+            <span className="font-label-caps text-label-caps text-outline uppercase">Recorded Velocity</span>
             <div className="w-8 h-8 rounded-xl bg-primary-fixed text-primary flex items-center justify-center">
               <span className="material-symbols-outlined text-lg">bolt</span>
             </div>
           </div>
           <div className="mt-3">
             <div className="font-stat-counter text-2xl lg:text-3xl font-extrabold text-on-surface">
-              {totalHistoricalXp.toLocaleString()} <span className="text-base text-primary font-bold">XP</span>
+              {Number(totalHistoricalXp).toLocaleString()} <span className="text-base text-primary font-bold">XP</span>
             </div>
             <p className="font-body-sm text-xs text-on-surface-variant mt-1 flex items-center gap-1">
               <span className="material-symbols-outlined text-tertiary text-sm">trending_up</span>
-              <span className="text-tertiary font-bold">+18.4%</span> vs previous cycle
+              <span className="text-tertiary font-bold">{xpVelocityPct >= 0 ? `+${xpVelocityPct}%` : `${xpVelocityPct}%`}</span> vs previous cycle
             </p>
           </div>
         </div>
@@ -206,8 +211,8 @@ export default function ProgressPage() {
               {completionRate}%
             </div>
             <p className="font-body-sm text-xs text-on-surface-variant mt-1 flex items-center gap-1">
-              <span className="font-bold text-on-surface">{completionStats?.totalCompleted || 290}</span> of{' '}
-              {completionStats?.totalAssigned || 324} logged completed
+              <span className="font-bold text-on-surface">{completionStats?.totalCompleted ?? 0}</span> of{' '}
+              {completionStats?.totalAssigned ?? 0} logged completed
             </p>
           </div>
         </div>
@@ -222,10 +227,10 @@ export default function ProgressPage() {
           </div>
           <div className="mt-3">
             <div className="font-stat-counter text-2xl lg:text-3xl font-extrabold text-secondary-container">
-              {totalHistoricalGold.toLocaleString()} <span className="text-base font-bold">G</span>
+              {Number(totalHistoricalGold).toLocaleString()} <span className="text-base font-bold">G</span>
             </div>
             <p className="font-body-sm text-xs text-on-surface-variant mt-1">
-              Wallet balance: <span className="font-bold text-on-surface">{state.gold.toLocaleString()} G</span>
+              Wallet balance: <span className="font-bold text-on-surface">{Number(state?.gold ?? 0).toLocaleString()} G</span>
             </p>
           </div>
         </div>
@@ -240,10 +245,10 @@ export default function ProgressPage() {
           </div>
           <div className="mt-3">
             <div className="font-stat-counter text-2xl lg:text-3xl font-extrabold text-on-surface">
-              {completionStats?.averageQuestsPerDay || 3.9} <span className="text-sm font-normal text-on-surface-variant">quests/day</span>
+              {completionStats?.averageQuestsPerDay ?? 0} <span className="text-sm font-normal text-on-surface-variant">quests/day</span>
             </div>
             <p className="font-body-sm text-xs text-on-surface-variant mt-1">
-              Peak streak: <span className="font-bold text-primary">{completionStats?.bestStreakDays || 31} days</span>
+              Active streak: <span className="font-bold text-primary">{completionStats?.streakDays ?? state?.streak ?? 0} days</span> (Peak: {completionStats?.bestStreakDays ?? state?.longestStreak ?? 0}d)
             </p>
           </div>
         </div>
@@ -369,8 +374,8 @@ export default function ProgressPage() {
                 <PieChart>
                   <Pie
                     data={[
-                      { name: 'Completed On-Time', value: completionStats?.onTimeRatePct || 94.2 },
-                      { name: 'Missed / Dropped', value: 100 - (completionStats?.onTimeRatePct || 94.2) },
+                      { name: 'Completed Quests', value: completionRate > 0 ? completionRate : 0.001 },
+                      { name: 'Remaining / In-Flight', value: Math.max(0, 100 - completionRate) },
                     ]}
                     cx="50%"
                     cy="50%"
@@ -389,10 +394,10 @@ export default function ProgressPage() {
             </div>
             <div className="absolute flex flex-col items-center justify-center pointer-events-none text-center">
               <span className="font-stat-counter text-3xl font-black text-on-surface leading-none">
-                {completionStats?.onTimeRatePct || 94.2}%
+                {completionRate}%
               </span>
               <span className="font-label-caps text-label-caps text-outline uppercase tracking-wider mt-1">
-                On-Time Rate
+                Completion Rate
               </span>
             </div>
           </div>
@@ -402,12 +407,12 @@ export default function ProgressPage() {
               <span className="text-on-surface-variant">Active Streak:</span>
               <span className="font-bold text-secondary flex items-center gap-1">
                 <span className="material-symbols-outlined text-sm fill">local_fire_department</span>
-                {completionStats?.streakDays || 14} Days
+                {completionStats?.streakDays ?? state?.streak ?? 0} Days
               </span>
             </div>
             <div className="flex items-center justify-between text-xs font-label-md">
               <span className="text-on-surface-variant">All-Time Longest:</span>
-              <span className="font-bold text-on-surface">{completionStats?.bestStreakDays || 31} Days</span>
+              <span className="font-bold text-on-surface">{completionStats?.bestStreakDays ?? state?.longestStreak ?? 0} Days</span>
             </div>
             <div className="flex items-center justify-between text-xs font-label-md">
               <span className="text-on-surface-variant">Completion Ratio:</span>
@@ -449,10 +454,17 @@ export default function ProgressPage() {
               </BarChart>
             </ResponsiveContainer>
           </div>
-          <div className="flex items-center justify-between text-xs text-on-surface-variant mt-2 pt-2 border-t border-surface-container">
-            <span>Minimum: 6 quests (W4)</span>
-            <span className="font-bold text-primary">Peak: 16 quests (W12)</span>
-          </div>
+          {(() => {
+            const weeklyQuests = weekly.map((w) => w.questsCompleted || 0);
+            const minQ = weeklyQuests.length > 0 ? Math.min(...weeklyQuests) : 0;
+            const maxQ = weeklyQuests.length > 0 ? Math.max(...weeklyQuests) : 0;
+            return (
+              <div className="flex items-center justify-between text-xs text-on-surface-variant mt-2 pt-2 border-t border-surface-container">
+                <span>Minimum: {minQ} quests/wk</span>
+                <span className="font-bold text-primary">Peak: {maxQ} quests/wk</span>
+              </div>
+            );
+          })()}
         </div>
 
         {/* Attribute Growth Radar */}
@@ -468,7 +480,7 @@ export default function ProgressPage() {
               </p>
             </div>
             <span className="font-label-caps text-label-caps text-outline uppercase bg-surface-variant px-2.5 py-1 rounded-full">
-              7 Axes
+              {attributeGrowth.length} Axes
             </span>
           </div>
 
@@ -557,6 +569,11 @@ export default function ProgressPage() {
                 </div>
               );
             })}
+            {topDomains.length === 0 && (
+              <p className="text-on-surface-variant text-body-sm py-4 text-center">
+                Complete quests to generate your domain distribution profile.
+              </p>
+            )}
           </div>
         </div>
 
@@ -591,29 +608,44 @@ export default function ProgressPage() {
           </div>
 
           {/* Time of Day Rhythm Grid */}
-          <div className="bg-surface-container p-4 rounded-xl flex flex-col gap-2">
-            <span className="font-label-caps text-label-caps text-outline uppercase tracking-wider">
-              Optimal Rhythm Focus
-            </span>
-            <div className="grid grid-cols-4 gap-2 text-center text-xs">
-              <div className="bg-surface-container-lowest p-2 rounded-lg">
-                <span className="block font-bold text-on-surface">Morning</span>
-                <span className="text-[10px] text-tertiary font-bold">38% Quests</span>
+          {(() => {
+            const hEntries = productivity.heatmap || [];
+            const morn = hEntries.filter((h) => h.time === 'Morning').reduce((s, h) => s + (h.value || 0), 0);
+            const aft = hEntries.filter((h) => h.time === 'Afternoon').reduce((s, h) => s + (h.value || 0), 0);
+            const eve = hEntries.filter((h) => h.time === 'Evening').reduce((s, h) => s + (h.value || 0), 0);
+            const nite = hEntries.filter((h) => h.time === 'Night').reduce((s, h) => s + (h.value || 0), 0);
+            const totalH = morn + aft + eve + nite;
+            const mornPct = totalH > 0 ? Math.round((morn / totalH) * 100) : 0;
+            const aftPct = totalH > 0 ? Math.round((aft / totalH) * 100) : 0;
+            const evePct = totalH > 0 ? Math.round((eve / totalH) * 100) : 0;
+            const nitePct = totalH > 0 ? Math.round((nite / totalH) * 100) : 0;
+
+            return (
+              <div className="bg-surface-container p-4 rounded-xl flex flex-col gap-2">
+                <span className="font-label-caps text-label-caps text-outline uppercase tracking-wider">
+                  Optimal Rhythm Focus
+                </span>
+                <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                  <div className="bg-surface-container-lowest p-2 rounded-lg">
+                    <span className="block font-bold text-on-surface">Morning</span>
+                    <span className="text-[10px] text-tertiary font-bold">{mornPct}% ({morn}Q)</span>
+                  </div>
+                  <div className="bg-surface-container-lowest p-2 rounded-lg">
+                    <span className="block font-bold text-on-surface">Afternoon</span>
+                    <span className="text-[10px] text-primary font-bold">{aftPct}% ({aft}Q)</span>
+                  </div>
+                  <div className="bg-surface-container-lowest p-2 rounded-lg">
+                    <span className="block font-bold text-on-surface">Evening</span>
+                    <span className="text-[10px] text-secondary font-bold">{evePct}% ({eve}Q)</span>
+                  </div>
+                  <div className="bg-surface-container-lowest p-2 rounded-lg">
+                    <span className="block font-bold text-on-surface">Night</span>
+                    <span className="text-[10px] text-on-surface-variant font-bold">{nitePct}% ({nite}Q)</span>
+                  </div>
+                </div>
               </div>
-              <div className="bg-surface-container-lowest p-2 rounded-lg">
-                <span className="block font-bold text-on-surface">Afternoon</span>
-                <span className="text-[10px] text-primary font-bold">29% Quests</span>
-              </div>
-              <div className="bg-surface-container-lowest p-2 rounded-lg">
-                <span className="block font-bold text-on-surface">Evening</span>
-                <span className="text-[10px] text-secondary font-bold">26% Quests</span>
-              </div>
-              <div className="bg-surface-container-lowest p-2 rounded-lg">
-                <span className="block font-bold text-on-surface">Night</span>
-                <span className="text-[10px] text-on-surface-variant font-bold">7% Quests</span>
-              </div>
-            </div>
-          </div>
+            );
+          })()}
         </div>
       </div>
     </div>

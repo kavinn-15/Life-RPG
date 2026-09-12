@@ -64,6 +64,9 @@ export default function QuestForm({ mode, questId, initialQuest, presetDomainId 
   const [reminder, setReminder] = useState(initialQuest?.reminder ?? '');
   const [imageUrl, setImageUrl] = useState(initialQuest?.imageUrl ?? '');
 
+  const [imageMode, setImageMode] = useState('upload'); // 'upload' | 'url'
+  const [imageFileName, setImageFileName] = useState('');
+
   // "Touched" fields opt out of domain-change auto-fill so editing an
   // existing quest (or a value the user already picked) never gets clobbered
   // when the domain select changes. Everything starts untouched in create
@@ -100,7 +103,7 @@ export default function QuestForm({ mode, questId, initialQuest, presetDomainId 
     if (!currentTouched.xp) setXp(Math.round((domain.xpRange.min + domain.xpRange.max) / 2));
     if (!currentTouched.gold) setGold(Math.round((domain.goldRange.min + domain.goldRange.max) / 2));
     if (!currentTouched.attribute) setPrimaryAttribute(domain.primaryAttribute[0]);
-    if (!currentTouched.image) setImageUrl(domain.heroImageUrl);
+    // Do NOT set imageUrl to domain.heroImageUrl automatically in the field
     if (!currentTouched.difficulty) setDifficulty(domain.difficultyDefault);
   }
 
@@ -111,6 +114,27 @@ export default function QuestForm({ mode, questId, initialQuest, presetDomainId 
   };
 
   const markTouched = (field) => setTouched((t) => (t[field] ? t : { ...t, [field]: true }));
+
+  const handleFileUpload = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFileName(file.name);
+    markTouched('image');
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') {
+        setImageUrl(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setImageUrl('');
+    setImageFileName('');
+    markTouched('image');
+  };
 
   const handleSuggestedQuest = (q) => {
     setTitle(q.title);
@@ -139,7 +163,7 @@ export default function QuestForm({ mode, questId, initialQuest, presetDomainId 
       statLabel: primaryAttribute ? `+3 ${capitalize(primaryAttribute)}` : undefined,
       deadline: deadline || null,
       reminder: reminder || null,
-      imageUrl: imageUrl || selectedDomain.heroImageUrl,
+      imageUrl: imageUrl.trim() || selectedDomain.heroImageUrl,
     };
 
     try {
@@ -288,15 +312,98 @@ export default function QuestForm({ mode, questId, initialQuest, presetDomainId 
               </label>
             </div>
 
-            <label className="flex flex-col gap-1.5">
-              <span className="font-label-md text-label-md text-on-surface-variant">Quest Image (optional)</span>
-              <input
-                value={imageUrl}
-                onChange={(e) => { markTouched('image'); setImageUrl(e.target.value); }}
-                className="w-full px-4 py-2.5 bg-surface rounded-2xl border border-surface-container-high focus:outline-none focus:ring-4 focus:ring-primary/15 font-body-sm text-body-sm text-on-surface"
-                placeholder="Defaults to the domain's hero image"
-              />
-            </label>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between">
+                <span className="font-label-md text-label-md text-on-surface-variant">Quest Image (optional)</span>
+                <div className="flex items-center gap-2 text-xs">
+                  <button
+                    type="button"
+                    onClick={() => setImageMode('upload')}
+                    className={`font-label-sm px-2 py-0.5 rounded-full transition-colors ${
+                      imageMode === 'upload' ? 'bg-primary-container text-on-primary font-bold' : 'text-on-surface-variant hover:text-on-surface'
+                    }`}
+                  >
+                    Upload File
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setImageMode('url')}
+                    className={`font-label-sm px-2 py-0.5 rounded-full transition-colors ${
+                      imageMode === 'url' ? 'bg-primary-container text-on-primary font-bold' : 'text-on-surface-variant hover:text-on-surface'
+                    }`}
+                  >
+                    Image URL
+                  </button>
+                </div>
+              </div>
+
+              {imageMode === 'upload' ? (
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 p-4 bg-surface rounded-2xl border border-dashed border-surface-container-high">
+                  {imageUrl ? (
+                    <div className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0 border border-surface-container bg-surface-container-high flex items-center justify-center">
+                      <img src={imageUrl} alt="Uploaded preview" className="w-full h-full object-cover" />
+                    </div>
+                  ) : (
+                    <div className="w-14 h-14 rounded-xl bg-surface-container-high flex items-center justify-center text-outline shrink-0">
+                      <span className="material-symbols-outlined text-2xl">add_photo_alternate</span>
+                    </div>
+                  )}
+                  <div className="flex-1 flex flex-col justify-center">
+                    <span className="font-label-md text-label-md text-on-surface font-semibold">
+                      {imageFileName || (imageUrl ? 'Custom image attached' : 'Choose any image file')}
+                    </span>
+                    <span className="font-body-xs text-xs text-on-surface-variant">
+                      Accepts all formats (PNG, JPG, WEBP, GIF, SVG). Leave empty to use domain banner.
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <label className="px-4 py-2 rounded-full bg-primary-container text-on-primary font-label-md text-label-md shadow-sm cursor-pointer hover:bg-primary transition-colors flex items-center gap-1.5">
+                      <span className="material-symbols-outlined text-base">upload_file</span>
+                      <span>{imageUrl ? 'Change' : 'Browse'}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="hidden"
+                      />
+                    </label>
+                    {imageUrl && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="px-3 py-2 rounded-full bg-surface-container hover:bg-error-container hover:text-on-error-container text-on-surface-variant font-label-md text-label-md transition-colors"
+                        title="Remove custom image"
+                      >
+                        <span className="material-symbols-outlined text-base align-middle">delete</span>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-1.5">
+                  <div className="flex gap-2">
+                    <input
+                      value={imageUrl}
+                      onChange={(e) => { markTouched('image'); setImageUrl(e.target.value); }}
+                      className="w-full px-4 py-2.5 bg-surface rounded-2xl border border-surface-container-high focus:outline-none focus:ring-4 focus:ring-primary/15 font-body-sm text-body-sm text-on-surface"
+                      placeholder="https://example.com/image.png (Optional)"
+                    />
+                    {imageUrl && (
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="px-3 py-2.5 rounded-2xl bg-surface border border-surface-container-high text-on-surface-variant hover:text-error hover:border-error transition-colors shrink-0"
+                      >
+                        Clear
+                      </button>
+                    )}
+                  </div>
+                  <span className="font-body-xs text-xs text-on-surface-variant px-1">
+                    Optional — Leave empty to automatically use the domain's aesthetic banner.
+                  </span>
+                </div>
+              )}
+            </div>
           </div>
 
           {selectedDomain && selectedDomain.quests.length > 0 && (

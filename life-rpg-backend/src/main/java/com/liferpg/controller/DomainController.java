@@ -61,4 +61,13 @@ public class DomainController {
         List<QuestResponseDTO> quests = questService.getQuestsByDomain(principal.getId(), id);
         return ResponseEntity.ok(ApiResponse.ok("Domain quests retrieved successfully", quests));
     }
+
+    @PostMapping
+    @Operation(summary = "Create a custom domain")
+    public ResponseEntity<ApiResponse<DomainResponseDTO>> createDomain(
+            @AuthenticationPrincipal UserPrincipal principal,
+            @jakarta.validation.Valid @RequestBody com.liferpg.dto.domain.DomainCreateRequestDTO req) {
+        DomainResponseDTO created = domainService.createDomain(principal != null ? principal.getId() : null, req);
+        return ResponseEntity.ok(ApiResponse.ok("Custom domain forged successfully", created));
+    }
 }

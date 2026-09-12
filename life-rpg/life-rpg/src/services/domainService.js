@@ -23,9 +23,15 @@ export async function getDomainQuests(id) {
   return api.get(`/domains/${id}/quests`);
 }
 
+// POST /api/domains
+export async function createDomain(data) {
+  return api.post('/domains', data);
+}
+
 export default {
   getDomains,
   getDomainById,
   getDomainAchievements,
   getDomainQuests,
+  createDomain,
 };

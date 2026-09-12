@@ -1,33 +1,24 @@
-// Mock daily-mission data for Alex, backing dailyMissionService.
-// `source` tells DailyMissionsPage which live GameContext field to read for
-// `current` progress instead of the static `mockCurrent` below — so missions
-// that map cleanly onto real state (quests completed today, etc.) stay in
-// sync with the rest of the app rather than drifting out of date.
-//
-//   source: 'questsCompletedToday' -> current = state.questsCompletedToday
-//   source: 'dailyQuestsRatio'     -> current = state.questsCompletedToday, target = state.questsTotalToday
-//   source: null                   -> current = mockCurrent (no live counter exists yet)
+// Dynamic daily-mission templates and helper evaluators.
+// Missions derive progress in real time from the player's actual daily quest activity.
 
 export const dailyMissions = [
   {
-    id: 'triple-threat',
+    id: 'complete-daily-3',
     title: 'Triple Threat',
     description: 'Complete 3 quests today, of any domain or difficulty.',
     icon: 'task_alt',
     source: 'questsCompletedToday',
     target: 3,
-    mockCurrent: null,
-    rewardXp: 50,
-    rewardGold: 20,
+    rewardXp: 150,
+    rewardGold: 50,
   },
   {
     id: 'full-house',
     title: 'Full House',
-    description: "Clear every quest on today's board.",
+    description: "Clear every quest on today's active board.",
     icon: 'checklist',
     source: 'dailyQuestsRatio',
-    target: null,
-    mockCurrent: null,
+    target: 4,
     rewardXp: 120,
     rewardGold: 60,
   },
@@ -36,11 +27,10 @@ export const dailyMissions = [
     title: 'XP Surge',
     description: 'Earn 200 XP from quests completed today.',
     icon: 'bolt',
-    source: null,
+    source: 'todayXp',
     target: 200,
-    mockCurrent: 140,
-    rewardXp: 75,
-    rewardGold: 25,
+    rewardXp: 100,
+    rewardGold: 30,
   },
   {
     id: 'keep-the-flame',
@@ -49,30 +39,27 @@ export const dailyMissions = [
     icon: 'local_fire_department',
     source: 'questsCompletedToday',
     target: 1,
-    mockCurrent: null,
-    rewardXp: 30,
-    rewardGold: 15,
+    rewardXp: 80,
+    rewardGold: 25,
   },
   {
     id: 'domain-diversifier',
     title: 'Domain Diversifier',
     description: 'Complete quests in 2 different domains today.',
     icon: 'public',
-    source: null,
+    source: 'todayDomains',
     target: 2,
-    mockCurrent: 1,
-    rewardXp: 90,
-    rewardGold: 35,
+    rewardXp: 120,
+    rewardGold: 40,
   },
   {
     id: 'gold-rush',
     title: 'Gold Rush',
     description: 'Earn 100 Gold from quests completed today.',
     icon: 'paid',
-    source: null,
+    source: 'todayGold',
     target: 100,
-    mockCurrent: 60,
-    rewardXp: 40,
-    rewardGold: 0,
+    rewardXp: 90,
+    rewardGold: 50,
   },
 ];

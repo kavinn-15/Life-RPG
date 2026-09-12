@@ -95,5 +95,10 @@ export async function resetPassword(email, otp, newPassword) {
   });
 }
 
-export default { login, register, logout, getCurrentUser, forgotPassword, verifyOtp, resetPassword };
+export async function checkEmail(email) {
+  if (!email) return { exists: false, available: true };
+  return await api.get(`/auth/check-email?email=${encodeURIComponent(email.trim().toLowerCase())}`);
+}
+
+export default { login, register, logout, getCurrentUser, forgotPassword, verifyOtp, resetPassword, checkEmail };
 

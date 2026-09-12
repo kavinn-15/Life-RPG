@@ -35,6 +35,7 @@ C:\Users\rprav\OneDrive\Desktop\hackathon\life-rpg-backend\src\main\java\com\lif
 C:\Users\rprav\OneDrive\Desktop\hackathon\life-rpg-backend\src\main\java\com\liferpg\dto\common\ApiErrorResponse.java
 C:\Users\rprav\OneDrive\Desktop\hackathon\life-rpg-backend\src\main\java\com\liferpg\dto\common\ApiResponse.java
 C:\Users\rprav\OneDrive\Desktop\hackathon\life-rpg-backend\src\main\java\com\liferpg\dto\common\PaginationDTO.java
+C:\Users\rprav\OneDrive\Desktop\hackathon\life-rpg-backend\src\main\java\com\liferpg\dto\domain\DomainCreateRequestDTO.java
 C:\Users\rprav\OneDrive\Desktop\hackathon\life-rpg-backend\src\main\java\com\liferpg\dto\domain\DomainQuestDTO.java
 C:\Users\rprav\OneDrive\Desktop\hackathon\life-rpg-backend\src\main\java\com\liferpg\dto\domain\DomainResponseDTO.java
 C:\Users\rprav\OneDrive\Desktop\hackathon\life-rpg-backend\src\main\java\com\liferpg\dto\domain\DomainStatsDTO.java

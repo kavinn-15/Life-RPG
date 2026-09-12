@@ -38,6 +38,13 @@ public class CharacterController {
         return ResponseEntity.ok(ApiResponse.ok(response));
     }
 
+    @PostMapping("/simulate-level-up")
+    @Operation(summary = "Simulate character level up and attribute progression")
+    public ResponseEntity<ApiResponse<CharacterResponseDTO>> simulateLevelUp(@AuthenticationPrincipal UserPrincipal principal) {
+        CharacterResponseDTO response = characterService.simulateLevelUp(principal.getId());
+        return ResponseEntity.ok(ApiResponse.ok(response));
+    }
+
     @GetMapping("/attributes")
     @Operation(summary = "Get player core attributes matrix")
     public ResponseEntity<ApiResponse<List<AttributeResponseDTO>>> getAttributes(@AuthenticationPrincipal UserPrincipal principal) {

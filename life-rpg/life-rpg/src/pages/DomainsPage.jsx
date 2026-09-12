@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import * as domainService from '../services/domainService';
 import DomainCard from '../components/DomainCard';
+import CreateDomainModal from '../components/CreateDomainModal';
 
 function DomainSkeletonGrid() {
   return (
@@ -36,6 +37,7 @@ export default function DomainsPage() {
   const [domains, setDomains] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('All Realms');
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const fetchDomains = () => {
     let cancelled = false;
@@ -62,15 +64,22 @@ export default function DomainsPage() {
     return fetchDomains();
   }, []);
 
+  const handleDomainCreated = (newDomain) => {
+    setDomains((prev) => {
+      if (prev.some((d) => d.id === newDomain.id)) return prev;
+      return [newDomain, ...prev];
+    });
+  };
+
   const filteredDomains = domains.filter((d) => {
     const matchesSearch =
       d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      d.tagline.toLowerCase().includes(searchQuery.toLowerCase());
+      d.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      d.tagline?.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesFilter =
       activeFilter === 'All Realms' ||
-      d.primaryAttribute.some((attr) => attr.toLowerCase() === activeFilter.toLowerCase());
+      (d.primaryAttribute && d.primaryAttribute.some((attr) => attr.toLowerCase() === activeFilter.toLowerCase()));
 
     return matchesSearch && matchesFilter;
   });
@@ -92,12 +101,11 @@ export default function DomainsPage() {
             Domains Explorer
           </h1>
           <p className="font-body-lg text-body-lg text-on-surface-variant mt-0.5 max-w-xl">
-            Every pursuit you track lives in a domain. Explore each of the 15 realms to see its stats, attribute
-            growth, and quest lineup.
+            Every pursuit you track lives in a domain. Explore realms, level up your stats, or chart custom domains to match your lifestyle.
           </p>
         </div>
-        <div className="flex items-center gap-6 shrink-0">
-          <div className="flex items-center gap-2">
+        <div className="flex items-center gap-4 shrink-0 flex-wrap">
+          <div className="flex items-center gap-2 bg-surface-container-lowest px-4 py-2 rounded-2xl shadow-sm">
             <span className="material-symbols-outlined fill text-tertiary-container text-2xl">
               check_circle
             </span>
@@ -105,18 +113,25 @@ export default function DomainsPage() {
               <span className="font-headline-sm text-headline-sm text-on-surface font-extrabold">
                 {totalQuests}
               </span>
-              <span className="font-label-caps text-label-caps text-outline uppercase">Quests Completed</span>
+              <span className="font-label-caps text-label-caps text-outline uppercase text-[10px]">Quests Completed</span>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 bg-surface-container-lowest px-4 py-2 rounded-2xl shadow-sm">
             <span className="material-symbols-outlined fill text-secondary-container text-2xl">bolt</span>
             <div className="flex flex-col leading-tight">
               <span className="font-headline-sm text-headline-sm text-on-surface font-extrabold">
                 {totalXp.toLocaleString()}
               </span>
-              <span className="font-label-caps text-label-caps text-outline uppercase">Total XP</span>
+              <span className="font-label-caps text-label-caps text-outline uppercase text-[10px]">Total XP</span>
             </div>
           </div>
+          <button
+            onClick={() => setIsCreateOpen(true)}
+            className="px-4 py-2.5 rounded-full bg-primary-container text-on-primary font-label-md text-label-md shadow-sm hover:translate-y-0.5 active:translate-y-1 transition-all flex items-center gap-2 whitespace-nowrap"
+          >
+            <span className="material-symbols-outlined text-base">add_location_alt</span>
+            <span>Add Custom Domain</span>
+          </button>
         </div>
       </div>
 
@@ -146,7 +161,7 @@ export default function DomainsPage() {
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Filter 15 domains..."
+            placeholder={`Filter ${domains.length} domains...`}
             className="w-full pl-9 pr-4 py-2 bg-surface-container-lowest rounded-full font-body-sm text-xs text-on-surface focus:outline-none focus:ring-2 focus:ring-primary border border-outline/5 transition-all"
           />
           {searchQuery && (
@@ -181,25 +196,36 @@ export default function DomainsPage() {
       {/* Loading state */}
       {loading && !error && <DomainSkeletonGrid />}
 
-      {/* Empty state */}
+      {/* Empty state when searching and no domain found */}
       {!loading && !error && filteredDomains.length === 0 && (
-        <div className="bg-surface-container-lowest rounded-2xl p-16 text-center flex flex-col items-center gap-3 shadow-sm border border-outline/5 my-4">
-          <div className="w-16 h-16 rounded-full bg-surface-variant text-outline flex items-center justify-center">
-            <span className="material-symbols-outlined text-3xl">travel_explore</span>
+        <div className="bg-surface-container-lowest rounded-3xl p-12 text-center flex flex-col items-center gap-4 shadow-sm border border-outline/5 my-4">
+          <div className="w-16 h-16 rounded-3xl bg-primary-container/10 text-primary flex items-center justify-center">
+            <span className="material-symbols-outlined text-3xl">add_location_alt</span>
           </div>
-          <h2 className="font-headline-sm text-headline-sm text-on-surface">No Uncharted Realms Found</h2>
+          <h2 className="font-headline-sm text-headline-sm text-on-surface">
+            Can't find {searchQuery ? `"${searchQuery}"` : 'your domain'}?
+          </h2>
           <p className="font-body-md text-body-md text-on-surface-variant max-w-md">
-            No domains match your search query "{searchQuery}". Clear your search to explore all 15 realms.
+            Chart a brand new custom realm to track your specific hobby, career skill, athletic pursuit, or habit discipline.
           </p>
-          <button
-            onClick={() => {
-              setSearchQuery('');
-              setActiveFilter('All Realms');
-            }}
-            className="mt-2 px-5 py-2.5 rounded-full bg-surface-variant hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-all"
-          >
-            Reset Filters
-          </button>
+          <div className="flex items-center gap-3 mt-2 flex-wrap justify-center">
+            <button
+              onClick={() => setIsCreateOpen(true)}
+              className="px-6 py-2.5 rounded-full bg-primary-container text-on-primary font-label-md text-label-md shadow-md hover:translate-y-0.5 transition-all flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-base">add</span>
+              <span>Chart Custom Realm</span>
+            </button>
+            <button
+              onClick={() => {
+                setSearchQuery('');
+                setActiveFilter('All Realms');
+              }}
+              className="px-5 py-2.5 rounded-full bg-surface hover:bg-surface-container text-on-surface font-label-md text-label-md transition-all"
+            >
+              View All Domains
+            </button>
+          </div>
         </div>
       )}
 
@@ -212,24 +238,41 @@ export default function DomainsPage() {
         </div>
       )}
 
+      {/* Bottom Action Card */}
       <div className="mt-8 bg-surface-container-lowest rounded-2xl p-6 shadow-sm flex flex-col sm:flex-row items-center justify-between gap-4 border border-outline/5">
         <div className="flex items-center gap-3">
           <span className="material-symbols-outlined fill text-secondary-container text-2xl">auto_fix_high</span>
           <div className="flex flex-col">
-            <span className="font-headline-sm text-headline-sm text-on-surface">Don't see the right quest?</span>
+            <span className="font-headline-sm text-headline-sm text-on-surface">Can't find what you're looking for?</span>
             <span className="font-body-sm text-body-sm text-on-surface-variant">
-              Forge a brand new one and pick its domain yourself.
+              Chart a custom realm or forge a new quest directly in your active queue.
             </span>
           </div>
         </div>
-        <Link
-          to="/quests/new"
-          className="px-5 py-2.5 rounded-full bg-primary-container text-on-primary font-label-md text-label-md shadow-sm hover:translate-y-0.5 transition-all flex items-center gap-1.5 shrink-0"
-        >
-          <span className="material-symbols-outlined text-base">add</span>
-          Forge a Quest
-        </Link>
+        <div className="flex items-center gap-3 shrink-0 flex-wrap">
+          <button
+            onClick={() => setIsCreateOpen(true)}
+            className="px-4 py-2.5 rounded-full bg-surface-container hover:bg-surface-container-high text-on-surface font-label-md text-label-md transition-all flex items-center gap-1.5"
+          >
+            <span className="material-symbols-outlined text-base">add_location_alt</span>
+            Add Realm
+          </button>
+          <Link
+            to="/quests/new"
+            className="px-5 py-2.5 rounded-full bg-primary-container text-on-primary font-label-md text-label-md shadow-sm hover:translate-y-0.5 transition-all flex items-center gap-1.5"
+          >
+            <span className="material-symbols-outlined text-base">add</span>
+            Forge a Quest
+          </Link>
+        </div>
       </div>
+
+      {/* Create Custom Domain Modal */}
+      <CreateDomainModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+        onDomainCreated={handleDomainCreated}
+      />
     </>
   );
 }

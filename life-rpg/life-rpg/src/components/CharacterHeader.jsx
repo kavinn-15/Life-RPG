@@ -1,7 +1,19 @@
+import { useState } from 'react';
 import { useGame } from '../state/GameContext';
 
 export default function CharacterHeader() {
-  const { state } = useGame();
+  const { state, simulateLevelUp } = useGame();
+  const [isSimulating, setIsSimulating] = useState(false);
+
+  const handleSimulate = async () => {
+    if (isSimulating) return;
+    setIsSimulating(true);
+    try {
+      await simulateLevelUp();
+    } finally {
+      setIsSimulating(false);
+    }
+  };
 
   return (
     <div className="relative bg-surface-container-lowest rounded-2xl shadow-md overflow-hidden">
@@ -34,9 +46,16 @@ export default function CharacterHeader() {
             </h1>
           </div>
         </div>
-        <button className="px-5 py-2.5 rounded-full bg-primary-container text-on-primary font-label-lg text-label-lg shadow-md hover:translate-y-0.5 active:translate-y-1 transition-all flex items-center gap-2 shrink-0">
-          <span className="material-symbols-outlined fill text-lg">bolt</span>
-          Simulate Level Up
+        <button
+          type="button"
+          onClick={handleSimulate}
+          disabled={isSimulating}
+          className="px-5 py-2.5 rounded-full bg-primary-container text-on-primary font-label-lg text-label-lg shadow-md hover:translate-y-0.5 active:translate-y-1 transition-all flex items-center gap-2 shrink-0 cursor-pointer disabled:opacity-70"
+        >
+          <span className={`material-symbols-outlined fill text-lg ${isSimulating ? 'animate-spin' : ''}`}>
+            {isSimulating ? 'progress_activity' : 'bolt'}
+          </span>
+          {isSimulating ? 'Ascending...' : 'Simulate Level Up'}
         </button>
       </div>
     </div>

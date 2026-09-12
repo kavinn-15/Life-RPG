@@ -34,6 +34,11 @@ export async function getProofOfWork() {
   return api.get('/character/proof-of-work');
 }
 
+// POST /api/character/simulate-level-up
+export async function simulateLevelUp() {
+  return api.post('/character/simulate-level-up');
+}
+
 // GET /api/character/milestone
 export async function getNextMilestone() {
   return api.get('/character/milestone');
@@ -49,6 +54,7 @@ export { xpForLevel };
 export default {
   getCharacter,
   updateCharacter,
+  simulateLevelUp,
   getAttributes,
   updateAttribute,
   getRelics,

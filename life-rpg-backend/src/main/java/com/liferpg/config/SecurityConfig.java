@@ -53,6 +53,7 @@ public class SecurityConfig {
                                 "/api/auth/forgot-password",
                                 "/api/auth/verify-otp",
                                 "/api/auth/reset-password",
+                                "/api/auth/check-email",
                                 "/api/health",
                                 "/api/leaderboard",
                                 "/swagger-ui/**",

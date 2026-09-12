@@ -165,6 +165,58 @@ export function GameProvider({ children }) {
 
   const clearLevelUp = useCallback(() => setLevelUpInfo(null), []);
 
+  const simulateLevelUp = useCallback(async () => {
+    try {
+      const updated = await characterService.simulateLevelUp();
+      if (updated) {
+        setState((prev) => ({
+          ...prev,
+          ...updated,
+        }));
+        setLevelUpInfo({
+          level: updated.level,
+          statKey: 'All Core Attributes',
+          statAmount: 2,
+          gold: 150,
+        });
+        pushToast(`Ascended to Level ${updated.level}! (+150 Gold & Stat Boost)`, 'military_tech');
+      }
+    } catch (err) {
+      console.warn('Backend simulate level up failed, running local simulation:', err);
+      setState((prev) => {
+        if (!prev) return prev;
+        const nextLevel = (prev.level || 1) + 1;
+        const nextGold = (prev.gold || 0) + 150;
+        const updatedAttrs = (prev.attributes || []).map((a) => {
+          const currentXp = (a.xp ?? a.currentXp ?? 0) + 60;
+          const currentWeekly = (a.weeklyXp ?? 0) + 60;
+          const currentPct = Math.min(100, (a.pct ?? a.percentage ?? 0) + 15);
+          const currentLevel = currentPct >= 100 ? (a.level || 1) + 1 : (a.level || 1);
+          return {
+            ...a,
+            xp: currentXp,
+            weeklyXp: currentWeekly,
+            pct: currentPct >= 100 ? currentPct - 100 : currentPct,
+            level: currentLevel,
+          };
+        });
+        setLevelUpInfo({
+          level: nextLevel,
+          statKey: 'All Core Attributes',
+          statAmount: 2,
+          gold: 150,
+        });
+        pushToast(`Ascended to Level ${nextLevel}! (+150 Gold & Stat Boost)`, 'military_tech');
+        return {
+          ...prev,
+          level: nextLevel,
+          gold: nextGold,
+          attributes: updatedAttrs,
+        };
+      });
+    }
+  }, [pushToast]);
+
   // Deducts Gold from the player. Callers (e.g. RewardShopPage) are expected
   // to have already confirmed affordability via state.gold before calling.
   const spendGold = useCallback(
@@ -218,6 +270,7 @@ export function GameProvider({ children }) {
       spendGold,
       levelUpInfo,
       clearLevelUp,
+      simulateLevelUp,
       toasts,
       pushToast,
       xpForLevel,
@@ -239,6 +292,7 @@ export function GameProvider({ children }) {
       spendGold,
       levelUpInfo,
       clearLevelUp,
+      simulateLevelUp,
       toasts,
       pushToast,
       equippedItems,

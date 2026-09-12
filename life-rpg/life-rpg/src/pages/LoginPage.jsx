@@ -37,10 +37,10 @@ export default function LoginPage() {
       await authService.login(email, password);
       setSuccess(true);
       setTimeout(() => {
-        navigate('/');
+        navigate('/adventure');
       }, 600);
     } catch (err) {
-      setServerError(err.message || 'Authentication failed. Verify credentials.');
+      setServerError(err.message || 'Authentication failed. Please check your credentials.');
       setLoading(false);
     }
   };
@@ -54,7 +54,7 @@ export default function LoginPage() {
       await authService.login('alex@liferpg.app', 'rpgmaster123');
       setSuccess(true);
       setTimeout(() => {
-        navigate('/');
+        navigate('/adventure');
       }, 500);
     } catch (err) {
       setServerError(err.message || 'Demo login failed');

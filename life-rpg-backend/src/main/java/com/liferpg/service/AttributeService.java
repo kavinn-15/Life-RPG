@@ -70,16 +70,16 @@ public class AttributeService {
     @Transactional
     public void initializeDefaultAttributes(User user) {
         List<AttributeData> defaults = List.of(
-                new AttributeData("coding", "Coding", "code", 14, 2850, 120, 15, 82, false, false),
-                new AttributeData("strength", "Strength", "fitness_center", 8, 1920, 180, 9, 72, false, false),
-                new AttributeData("intelligence", "Intelligence", "psychology", 11, 2100, 45, 12, 84, false, false),
-                new AttributeData("discipline", "Discipline", "shield", 9, 1600, 90, 10, 65, false, false),
-                new AttributeData("knowledge", "Knowledge", "menu_book", 9, 1450, 35, 10, 58, false, false),
-                new AttributeData("focus", "Focus", "center_focus_strong", 10, 1700, 85, 11, 80, false, false),
-                new AttributeData("vitality", "Health & Vitality", "favorite", 8, 1300, 50, 9, 45, false, false),
-                new AttributeData("creativity", "Creativity", "palette", 6, 750, 0, 7, 40, true, false),
-                new AttributeData("social", "Social & Empathy", "groups", 5, 620, 0, 6, 30, false, true),
-                new AttributeData("travel", "Experience & Travel", "flight_takeoff", 6, 810, 20, 7, 50, false, false)
+                new AttributeData("coding", "Coding", "code", 1, 0, 0, 2, 0, false, false),
+                new AttributeData("strength", "Strength", "fitness_center", 1, 0, 0, 2, 0, false, false),
+                new AttributeData("intelligence", "Intelligence", "psychology", 1, 0, 0, 2, 0, false, false),
+                new AttributeData("discipline", "Discipline", "shield", 1, 0, 0, 2, 0, false, false),
+                new AttributeData("knowledge", "Knowledge", "menu_book", 1, 0, 0, 2, 0, false, false),
+                new AttributeData("focus", "Focus", "center_focus_strong", 1, 0, 0, 2, 0, false, false),
+                new AttributeData("vitality", "Health & Vitality", "favorite", 1, 0, 0, 2, 0, false, false),
+                new AttributeData("creativity", "Creativity", "palette", 1, 0, 0, 2, 0, false, false),
+                new AttributeData("social", "Social & Empathy", "groups", 1, 0, 0, 2, 0, false, false),
+                new AttributeData("travel", "Experience & Travel", "flight_takeoff", 1, 0, 0, 2, 0, false, false)
         );
 
         for (AttributeData d : defaults) {

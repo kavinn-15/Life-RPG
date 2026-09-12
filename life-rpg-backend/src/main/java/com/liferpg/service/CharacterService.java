@@ -20,17 +20,23 @@ public class CharacterService {
     private final EquippedRelicRepository relicRepository;
     private final ProofOfWorkRepository proofOfWorkRepository;
     private final LevelService levelService;
+    private final AttributeService attributeService;
+    private final NotificationService notificationService;
 
     public CharacterService(CharacterRepository characterRepository,
                             AttributeRepository attributeRepository,
                             EquippedRelicRepository relicRepository,
                             ProofOfWorkRepository proofOfWorkRepository,
-                            LevelService levelService) {
+                            LevelService levelService,
+                            AttributeService attributeService,
+                            NotificationService notificationService) {
         this.characterRepository = characterRepository;
         this.attributeRepository = attributeRepository;
         this.relicRepository = relicRepository;
         this.proofOfWorkRepository = proofOfWorkRepository;
         this.levelService = levelService;
+        this.attributeService = attributeService;
+        this.notificationService = notificationService;
     }
 
     @Transactional(readOnly = true)
@@ -138,12 +144,59 @@ public class CharacterService {
         return new ProofOfWorkResponseDTO(pow.getId(), pow.getSource(), pow.getDetail(), pow.getReward(), pow.getIcon(), true);
     }
 
+    @Transactional
+    public CharacterResponseDTO simulateLevelUp(Long userId) {
+        Character character = characterRepository.findByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Character not found for user: " + userId));
+
+        User user = character.getUser();
+
+        // Level up character
+        int newLevel = character.getLevel() + 1;
+        character.setLevel(newLevel);
+        character.setCurrentXp(0);
+        character.setTotalXp(character.getTotalXp() + levelService.getRequiredXpForLevel(newLevel - 1));
+
+        // Bonus gold
+        int bonusGold = 150;
+        character.setGold(character.getGold() + bonusGold);
+        characterRepository.save(character);
+
+        // Ensure user has all attributes and award +60 XP to all 10 core attributes
+        List<Attribute> attributes = attributeRepository.findByUserId(userId);
+        if (attributes.isEmpty()) {
+            attributeService.initializeDefaultAttributes(user);
+            attributes = attributeRepository.findByUserId(userId);
+        }
+        for (Attribute attr : attributes) {
+            attributeService.processAttributeXpGain(user, attr.getAttributeKey(), 60);
+        }
+
+        // Trigger level up notification
+        notificationService.createNotification(
+                user,
+                com.liferpg.enums.NotificationType.level_up,
+                "Ascended to Level " + newLevel + "!",
+                "Simulated level up awakened new power! Level " + newLevel + " unlocked (+150 Gold & Stat Boost).",
+                "military_tech",
+                "text-secondary-container bg-secondary-fixed",
+                "/character",
+                "View Sheet"
+        );
+
+        return getCharacter(userId);
+    }
+
     @Transactional(readOnly = true)
     public MilestoneResponseDTO getNextMilestone(Long userId) {
+        Character character = characterRepository.findByUserId(userId).orElse(null);
+        int lvl = character != null ? character.getLevel() : 1;
+        int nextTarget = ((lvl / 5) + 1) * 5;
+        int pct = (int) Math.min(100, Math.max(10, Math.round(((double) (lvl % 5) / 5.0) * 100.0)));
         return new MilestoneResponseDTO(
-                "Master Architect Ascendancy",
-                "Unlock the dual-specialization node once Coding and Intelligence both surpass Level 15.",
-                84
+                "Ascendancy Tier " + ((lvl / 5) + 1) + " Mastery",
+                "Advance core attributes and reach Level " + nextTarget + " to unlock elite archetype dual-specialization nodes.",
+                pct
         );
     }
 
@@ -151,10 +204,11 @@ public class CharacterService {
     public List<RadarAxisDTO> getRadarAxes(Long userId) {
         return List.of(
                 new RadarAxisDTO("coding", "CODING"),
+                new RadarAxisDTO("strength", "STR"),
                 new RadarAxisDTO("intelligence", "INTEL"),
                 new RadarAxisDTO("discipline", "DISC"),
                 new RadarAxisDTO("focus", "FOCUS"),
-                new RadarAxisDTO("strength", "STR")
+                new RadarAxisDTO("vitality", "VITALITY")
         );
     }
 

@@ -1,22 +1,51 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useGame } from '../state/GameContext';
+import * as questService from '../services/questService';
 
-export default function ActiveQuestCard({ quest }) {
+export default function ActiveQuestCard({ quest, onCompleted }) {
   const { grantRewards, pushToast } = useGame();
-  const [milestones, setMilestones] = useState(quest.milestones ?? []);
-  const [completed, setCompleted] = useState(false);
+  const [milestones, setMilestones] = useState(() =>
+    (quest?.milestones ?? []).map((m) => ({
+      ...m,
+      done: Boolean(m.done ?? m.completed),
+    }))
+  );
+  const [completed, setCompleted] = useState(() => Boolean(quest?.done || quest?.status === 'COMPLETED'));
   const [showRewardPop, setShowRewardPop] = useState(false);
 
-  const doneCount = milestones.filter((m) => m.done).length;
-  const pct = milestones.length ? Math.round((doneCount / milestones.length) * 100) : quest.sprintPct ?? 0;
+  useEffect(() => {
+    if (quest?.milestones) {
+      setMilestones(
+        quest.milestones.map((m) => ({
+          ...m,
+          done: Boolean(m.done ?? m.completed),
+        }))
+      );
+    }
+    setCompleted(Boolean(quest?.done || quest?.status === 'COMPLETED'));
+  }, [quest]);
 
-  const toggleMilestone = (id) => {
-    setMilestones((prev) => prev.map((m) => (m.id === id ? { ...m, done: !m.done } : m)));
+  const doneCount = milestones.filter((m) => m.done).length;
+  const pct = milestones.length
+    ? Math.round((doneCount / milestones.length) * 100)
+    : Number(quest?.progress ?? quest?.sprintPct ?? (completed ? 100 : 0));
+
+  const toggleMilestone = async (id) => {
+    setMilestones((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, done: !m.done } : m))
+    );
+    try {
+      if (quest?.id && id) {
+        await questService.toggleMilestone(quest.id, id);
+      }
+    } catch (err) {
+      console.warn('Backend toggleMilestone sync error:', err);
+    }
   };
 
-  const handleComplete = () => {
+  const handleComplete = async () => {
     if (completed) return;
     setCompleted(true);
     setShowRewardPop(true);
@@ -24,10 +53,20 @@ export default function ActiveQuestCard({ quest }) {
       xp: quest.xp,
       gold: quest.gold,
       statKey: quest.statKey,
-      statAmount: 3,
+      statAmount: quest.statAmount || 3,
       questTitle: quest.title,
     });
     pushToast(`${quest.title} complete · +${quest.xp} XP`);
+    try {
+      if (quest?.id) {
+        await questService.completeQuest(quest.id);
+      }
+    } catch (err) {
+      console.warn('Backend completeQuest sync error:', err);
+    }
+    if (onCompleted && quest?.id) {
+      onCompleted(quest.id);
+    }
     setTimeout(() => setShowRewardPop(false), 2400);
   };
 

@@ -123,13 +123,22 @@ public class AuthService {
 
     @Transactional
     public AuthResponseDTO login(LoginRequestDTO req) {
+        String cleanEmail = req.getEmail().toLowerCase().trim();
+
+        // Security check: verify if the account exists in database
+        User user = userRepository.findByEmail(cleanEmail)
+                .orElseThrow(() -> new BadRequestException("No adventurer account found with email: " + cleanEmail + ". This account does not exist. Please register first."));
+
+        // Security check: verify password matches
+        if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
+            throw new BadRequestException("Invalid password. Please check your credentials or reset your password.");
+        }
+
         Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(req.getEmail().toLowerCase().trim(), req.getPassword())
+                new UsernamePasswordAuthenticationToken(cleanEmail, req.getPassword())
         );
 
         UserPrincipal principal = (UserPrincipal) authentication.getPrincipal();
-        User user = userRepository.findById(principal.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + principal.getId()));
 
         user.setLastLoginAt(LocalDateTime.now());
         userRepository.save(user);
@@ -147,6 +156,12 @@ public class AuthService {
         );
 
         return new AuthResponseDTO(token, userDTO);
+    }
+
+    @Transactional(readOnly = true)
+    public boolean checkEmailExists(String email) {
+        if (email == null || email.isBlank()) return false;
+        return userRepository.existsByEmail(email.toLowerCase().trim());
     }
 
     @Transactional(readOnly = true)
@@ -168,11 +183,84 @@ public class AuthService {
 
     private void seedStarterQuests(User user) {
         Domain prog = domainRepository.findById("programming").orElse(null);
-        Domain sport = domainRepository.findById("sports").orElse(null);
+        Domain fit = domainRepository.findById("fitness").orElse(null);
         Domain read = domainRepository.findById("reading").orElse(null);
-        Domain medit = domainRepository.findById("meditation").orElse(null);
+        Domain mind = domainRepository.findById("mindfulness").orElse(null);
 
-        // Daily quests
+        // 1. Featured Quest for Adventure Page
+        Quest featured = new Quest("featured-" + UUID.randomUUID().toString().substring(0, 6),
+                user, prog, "Programming", "Introduction to System Architecture (Microservices Kafka Pipeline)",
+                "Architecting event-driven streams, configuring consumer groups for real-time telemetry, and stress-testing idempotency against simulated socket drops.",
+                "Hard", "bg-primary-container text-on-primary",
+                QuestStatus.ACTIVE, QuestType.FEATURED, 280, 95, "intelligence", 30, "terminal");
+        featured.setFeatured(true);
+        featured.setProgressPercentage(65);
+        featured.setProgressLabel("Module 4 of 6");
+        featured.setMilestoneLabel("MILESTONE PROGRESSION (2/3)");
+        featured.setTimeRemaining("120m Remaining");
+        featured.setDomainClass("bg-primary-container text-on-primary");
+        featured.addMilestone(new QuestMilestone("fm1-" + UUID.randomUUID().toString().substring(0, 6), featured, "Architect event-driven streams & schema", 1, true));
+        featured.addMilestone(new QuestMilestone("fm2-" + UUID.randomUUID().toString().substring(0, 6), featured, "Configure real-time consumer groups", 2, true));
+        featured.addMilestone(new QuestMilestone("fm3-" + UUID.randomUUID().toString().substring(0, 6), featured, "Stress-test idempotency under socket drop", 3, false));
+        questRepository.save(featured);
+
+        // 2. Continue Quests (Active quests with progress > 0)
+        Quest cont1 = new Quest("cont-fitness-" + UUID.randomUUID().toString().substring(0, 6),
+                user, fit, "Fitness", "Master the Field: Conditioning & Core Workout",
+                "Execute 4 explosive core sets, agility ladders, and mobility stretching.",
+                "Medium", "bg-secondary-fixed text-on-secondary-fixed",
+                QuestStatus.ACTIVE, QuestType.NORMAL, 80, 30, "strength", 20, "fitness_center");
+        cont1.setProgressPercentage(75);
+        cont1.setProgressLabel("3 / 4 Sets Completed");
+        cont1.setProgressClass("bg-secondary-container");
+        cont1.setTimeRemaining("45m Session");
+        cont1.setDomainClass("bg-secondary-fixed text-on-secondary-fixed");
+        cont1.addMilestone(new QuestMilestone("cm1-" + UUID.randomUUID().toString().substring(0, 6), cont1, "15m dynamic hip & hamstring mobility", 1, true));
+        cont1.addMilestone(new QuestMilestone("cm2-" + UUID.randomUUID().toString().substring(0, 6), cont1, "3x12 Explosive box jumps", 2, true));
+        cont1.addMilestone(new QuestMilestone("cm3-" + UUID.randomUUID().toString().substring(0, 6), cont1, "Core plank burnout series", 3, false));
+        questRepository.save(cont1);
+
+        Quest cont2 = new Quest("cont-reading-" + UUID.randomUUID().toString().substring(0, 6),
+                user, read, "Reading", "Read 25 Pages: Data-Intensive Applications",
+                "Chapter 5: Reliable replication, failovers, and consensus models in distributed state.",
+                "Medium", "bg-tertiary-fixed text-on-tertiary-fixed",
+                QuestStatus.ACTIVE, QuestType.NORMAL, 65, 20, "wisdom", 15, "auto_stories");
+        cont2.setProgressPercentage(40);
+        cont2.setProgressLabel("10 / 25 Pages Read");
+        cont2.setProgressClass("bg-tertiary-container");
+        cont2.setTimeRemaining("30m Session");
+        cont2.setDomainClass("bg-tertiary-fixed text-on-tertiary-fixed");
+        questRepository.save(cont2);
+
+        // 3. Recommended Quests
+        Quest rec1 = new Quest("rec-sprint-" + UUID.randomUUID().toString().substring(0, 6),
+                user, fit, "Fitness", "Morning Athletic 5km Interval Sprint",
+                "High-intensity intervals: 60s sprint followed by 90s recovery jog.",
+                "Medium", "bg-secondary-fixed text-on-secondary-fixed",
+                QuestStatus.ACTIVE, QuestType.NORMAL, 80, 25, "agility", 20, "sprint");
+        rec1.setRecommended(true);
+        rec1.setDomainClass("bg-secondary-fixed text-on-secondary-fixed");
+        questRepository.save(rec1);
+
+        Quest rec2 = new Quest("rec-mind-" + UUID.randomUUID().toString().substring(0, 6),
+                user, mind, "Mindfulness", "15m Box Breathing & Cortisol Reset",
+                "Controlled 4-4-4-4 pulmonary cycle to deactivate stress receptors.",
+                "Easy", "bg-surface-variant text-on-surface-variant",
+                QuestStatus.ACTIVE, QuestType.NORMAL, 40, 15, "discipline", 15, "self_improvement");
+        rec2.setRecommended(true);
+        rec2.setDomainClass("bg-surface-variant text-on-surface-variant");
+        questRepository.save(rec2);
+
+        Quest rec3 = new Quest("rec-code-" + UUID.randomUUID().toString().substring(0, 6),
+                user, prog, "Programming", "UI/UX Micro-Interaction Prototype",
+                "Build 3 spring-physics tactile toggles and component interactions.",
+                "Hard", "bg-primary-container text-on-primary",
+                QuestStatus.ACTIVE, QuestType.NORMAL, 90, 35, "creativity", 25, "palette");
+        rec3.setRecommended(true);
+        rec3.setDomainClass("bg-primary-container text-on-primary");
+        questRepository.save(rec3);
+
+        // 4. Daily quests
         Quest q1 = new Quest("daily-hydration-" + UUID.randomUUID().toString().substring(0, 6),
                 user, null, "Health", "Log morning hydration (500ml)",
                 "Drink 500ml of clean water within 15 minutes of waking.", "Common", "bg-surface-variant text-on-surface-variant",
@@ -186,16 +274,6 @@ public class AuthService {
                 QuestStatus.ACTIVE, QuestType.DAILY, 25, 10, "vitality", 10, "directions_walk");
         q2.setDaily(true);
         questRepository.save(q2);
-
-        // Active quest
-        Quest q3 = new Quest("quest-starter-" + UUID.randomUUID().toString().substring(0, 6),
-                user, prog, "Programming", "Introduction to System Architecture",
-                "Learn distributed systems core principles and set up local dev environment.",
-                "Medium", "bg-secondary-fixed text-on-secondary-fixed",
-                QuestStatus.ACTIVE, QuestType.NORMAL, 80, 30, "coding", 20, "code");
-        q3.addMilestone(new QuestMilestone("m1-" + UUID.randomUUID().toString().substring(0, 6), q3, "Install Java 21 and Maven", 1, true));
-        q3.addMilestone(new QuestMilestone("m2-" + UUID.randomUUID().toString().substring(0, 6), q3, "Review Spring Boot Documentation", 2, false));
-        questRepository.save(q3);
     }
 
     @Transactional

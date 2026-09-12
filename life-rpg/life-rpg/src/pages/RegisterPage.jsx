@@ -12,6 +12,36 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
   const [success, setSuccess] = useState(false);
+  const [emailStatus, setEmailStatus] = useState({ checking: false, available: null, message: '' });
+
+  const checkEmailLive = async (emailVal) => {
+    const clean = emailVal.trim().toLowerCase();
+    if (!clean || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(clean)) {
+      setEmailStatus({ checking: false, available: null, message: '' });
+      return;
+    }
+    setEmailStatus({ checking: true, available: null, message: '' });
+    try {
+      const res = await authService.checkEmail(clean);
+      if (res?.exists) {
+        setEmailStatus({
+          checking: false,
+          available: false,
+          message: 'An adventurer with this email already exists.',
+        });
+        setErrors((prev) => ({ ...prev, email: 'This email is already registered. Please login instead.' }));
+      } else {
+        setEmailStatus({
+          checking: false,
+          available: true,
+          message: 'Email is available for registration.',
+        });
+        setErrors((prev) => ({ ...prev, email: null }));
+      }
+    } catch {
+      setEmailStatus({ checking: false, available: null, message: '' });
+    }
+  };
 
   const validate = () => {
     const errs = {};
@@ -22,6 +52,8 @@ export default function RegisterPage() {
       errs.email = 'Email address is required.';
     } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       errs.email = 'Enter a valid email address (e.g. hero@domain.com).';
+    } else if (emailStatus.available === false) {
+      errs.email = 'This email is already registered. Please login instead.';
     }
     if (!password) {
       errs.password = 'Password is required.';
@@ -128,9 +160,29 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label htmlFor="reg-email" className="block font-label-md text-xs text-ink-muted mb-1 font-semibold">
-              Email Address
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label htmlFor="reg-email" className="font-label-md text-xs text-ink-muted font-semibold">
+                Email Address
+              </label>
+              {emailStatus.checking && (
+                <span className="text-[10px] text-ink-muted flex items-center gap-1">
+                  <span className="material-symbols-outlined text-xs animate-spin">progress_activity</span>
+                  Checking...
+                </span>
+              )}
+              {emailStatus.available === true && !errors.email && (
+                <span className="text-[10px] text-tertiary flex items-center gap-1 font-bold">
+                  <span className="material-symbols-outlined text-xs">check_circle</span>
+                  Available
+                </span>
+              )}
+              {emailStatus.available === false && (
+                <span className="text-[10px] text-error flex items-center gap-1 font-bold">
+                  <span className="material-symbols-outlined text-xs">error</span>
+                  Already Registered
+                </span>
+              )}
+            </div>
             <div className="relative">
               <span className="material-symbols-outlined absolute left-3.5 top-3 text-ink-muted text-lg pointer-events-none">
                 mail
@@ -142,12 +194,25 @@ export default function RegisterPage() {
                 onChange={(e) => {
                   setEmail(e.target.value);
                   if (errors.email) setErrors((prev) => ({ ...prev, email: null }));
+                  if (e.target.value.includes('@') && e.target.value.includes('.')) {
+                    checkEmailLive(e.target.value);
+                  }
                 }}
+                onBlur={(e) => checkEmailLive(e.target.value)}
                 placeholder="alex@liferpg.app"
-                className={`w-full pl-10 pr-4 py-2.5 bg-ink-rail border rounded-xl text-sm text-white placeholder-ink-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all ${
-                  errors.email ? 'border-error ring-1 ring-error' : 'border-ink-border'
+                className={`w-full pl-10 pr-10 py-2.5 bg-ink-rail border rounded-xl text-sm text-white placeholder-ink-muted focus:outline-none focus:ring-2 focus:ring-primary transition-all ${
+                  errors.email || emailStatus.available === false
+                    ? 'border-error ring-1 ring-error'
+                    : emailStatus.available === true
+                    ? 'border-tertiary/60 ring-1 ring-tertiary/40'
+                    : 'border-ink-border'
                 }`}
               />
+              {emailStatus.available === true && (
+                <span className="material-symbols-outlined absolute right-3 top-3 text-tertiary text-lg pointer-events-none">
+                  verified
+                </span>
+              )}
             </div>
             {errors.email && (
               <p className="font-body-sm text-[11px] text-error mt-1">{errors.email}</p>
