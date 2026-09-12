@@ -6,7 +6,7 @@
 [![Swagger](https://img.shields.io/badge/API%20Docs-Swagger%20%2F%20OpenAPI-85EA2D?style=flat-square&logo=swagger&logoColor=black)](http://localhost:8080/swagger-ui.html)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
-> **Life-RPG** is a full-stack gamified productivity and habit-building web application that transforms your real-world tasks, habits, and personal growth milestones into an engaging RPG experience. Earn XP, level up character attributes, maintain streaks, unlock achievements, and redeem rewards in the virtual shop.
+> **Life-RPG** is a full-stack gamified personal growth and habit-building web application that transforms your real-world tasks, habits, and discipline into an RPG adventure. Earn XP, level up attributes, maintain streaks, unlock achievements, customize your avatar, and redeem rewards in the virtual shop.
 
 ---
 
@@ -20,7 +20,7 @@
 ### 🛡️ Character & Attribute Progression
 - **Attribute Matrix**: 10 distinct RPG attributes (Coding, Logic, Physical Resilience, Focus, Discipline, etc.) mapped dynamically on an interactive Radar Chart.
 - **Level Continuum**: Live XP bar with milestone tracking, rank tier updates, and leveling calculation.
-- **Customizable Avatar**: Choose from 5 distinct vector character archetypes or upload custom player portraits with instant live preview.
+- **Customizable Avatar**: Choose from 5 distinct vector character archetypes (Cyan, Rose, Teal, Amber, Crimson) or upload custom player portraits from your computer with live preview.
 
 ### 🔥 Streak Center & Proof-of-Work
 - **Interactive Streak Calendar**: Visual 30-day tracking calendar highlighting completed vs active days.
@@ -29,7 +29,7 @@
 
 ### 🏆 Achievements & Badges
 - **Milestone Unlocks**: Unlock achievements based on total quests completed, level milestones, and stat thresholds.
-- **Interactive Badges**: Visual rarity tiers (Bronze, Silver, Gold, Diamond) with instant reward claiming.
+- **Interactive Badges**: Visual rarity tiers (Bronze, Silver, Gold, Diamond) with instant reward claiming and persistent state sync.
 
 ### 🎁 Reward Shop & Inventory
 - **Real-Life Rewards**: Create and redeem customized rewards (e.g., "Guilt-free Gaming Night", "Special Coffee") using hard-earned in-game gold.
@@ -50,14 +50,18 @@
 
 ```
 Life-RPG/
-├── life-rpg-frontend/       # React + Vite Frontend
-│   └── life-rpg/           # Vite application root
+├── life-rpg-frontend/       # Frontend Root
+│   └── life-rpg/           # React + Vite application
 │       ├── src/
-│       │   ├── components/ # Reusable UI components (Sidebar, Topbar, Modals, RadarChart)
-│       │   ├── pages/      # Application views & route handlers
-│       │   ├── services/   # API client & backend service integration layer
+│       │   ├── assets/     # Images, icons, and static assets
+│       │   ├── components/ # Reusable UI components (Sidebar, Topbar, Modals, RadarChart, AvatarDisplay)
+│       │   ├── data/       # Default schemas, quest data, and fallback datasets
+│       │   ├── pages/      # Application views (Dashboard, Quests, Character, Streaks, Shop, etc.)
+│       │   ├── services/   # REST API client & backend service integration layer
 │       │   ├── state/      # Global React Context (GameContext, Auth)
-│       │   └── data/       # Default mock schemas & fallback datasets
+│       │   └── utils/      # Formatting, calculations & helper functions
+│       ├── package.json
+│       └── vite.config.js
 ├── life-rpg-backend/       # Spring Boot 3.3.4 (Java 21) REST API
 │   ├── src/main/java/com/liferpg/
 │   │   ├── config/         # Security, JWT, CORS, and Web MVC configuration
@@ -66,7 +70,9 @@ Life-RPG/
 │   │   ├── repository/     # Spring Data JPA repositories
 │   │   ├── security/       # JWT Filters, UserDetailsService & Auth Providers
 │   │   └── service/        # Business logic & email delivery services
-│   └── src/main/resources/ # application.properties, database configs
+│   ├── src/main/resources/ # application.properties, database configs
+│   └── pom.xml
+└── README.md
 ```
 
 ### 💻 Technologies Used
@@ -186,6 +192,12 @@ jwt.expiration=86400000
 
 # CORS
 frontend.url=http://localhost:5173
+
+# JavaMail for OTP Verification
+spring.mail.host=smtp.gmail.com
+spring.mail.port=587
+spring.mail.username=your_email@gmail.com
+spring.mail.password=your_app_password
 ```
 
 ---
