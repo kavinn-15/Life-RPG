@@ -2,8 +2,8 @@ package com.liferpg.service;
 
 import com.liferpg.dto.progress.ProgressHistoryResponseDTO;
 import com.liferpg.dto.progress.ProgressHistoryResponseDTO.*;
+import com.liferpg.entity.*;
 import com.liferpg.entity.Character;
-import com.liferpg.entity.StreakLog;
 import com.liferpg.enums.QuestStatus;
 import com.liferpg.exception.ResourceNotFoundException;
 import com.liferpg.repository.*;

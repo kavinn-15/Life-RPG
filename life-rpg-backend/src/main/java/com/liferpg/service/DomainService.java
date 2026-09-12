@@ -1,6 +1,7 @@
 package com.liferpg.service;
 
 import com.liferpg.dto.achievement.AchievementResponseDTO;
+import com.liferpg.dto.domain.DomainCreateRequestDTO;
 import com.liferpg.dto.domain.DomainQuestDTO;
 import com.liferpg.dto.domain.DomainResponseDTO;
 import com.liferpg.dto.domain.DomainStatsDTO;
@@ -9,6 +10,7 @@ import com.liferpg.entity.UserDomain;
 import com.liferpg.exception.ResourceNotFoundException;
 import com.liferpg.repository.DomainRepository;
 import com.liferpg.repository.UserDomainRepository;
+import com.liferpg.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,12 +22,12 @@ public class DomainService {
 
     private final DomainRepository domainRepository;
     private final UserDomainRepository userDomainRepository;
-    private final com.liferpg.repository.UserRepository userRepository;
+    private final UserRepository userRepository;
     private final AchievementService achievementService;
 
     public DomainService(DomainRepository domainRepository,
                          UserDomainRepository userDomainRepository,
-                         com.liferpg.repository.UserRepository userRepository,
+                         UserRepository userRepository,
                          AchievementService achievementService) {
         this.domainRepository = domainRepository;
         this.userDomainRepository = userDomainRepository;

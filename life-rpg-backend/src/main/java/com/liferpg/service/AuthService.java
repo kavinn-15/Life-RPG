@@ -33,8 +33,6 @@ public class AuthService {
     private final DomainRepository domainRepository;
     private final UserDomainRepository userDomainRepository;
     private final QuestRepository questRepository;
-    private final RewardRepository rewardRepository;
-    private final InventoryItemRepository inventoryItemRepository;
     private final PasswordResetOtpRepository passwordResetOtpRepository;
     private final EmailService emailService;
     private final PasswordEncoder passwordEncoder;
@@ -48,8 +46,6 @@ public class AuthService {
                        DomainRepository domainRepository,
                        UserDomainRepository userDomainRepository,
                        QuestRepository questRepository,
-                       RewardRepository rewardRepository,
-                       InventoryItemRepository inventoryItemRepository,
                        PasswordResetOtpRepository passwordResetOtpRepository,
                        EmailService emailService,
                        PasswordEncoder passwordEncoder,
@@ -62,8 +58,6 @@ public class AuthService {
         this.domainRepository = domainRepository;
         this.userDomainRepository = userDomainRepository;
         this.questRepository = questRepository;
-        this.rewardRepository = rewardRepository;
-        this.inventoryItemRepository = inventoryItemRepository;
         this.passwordResetOtpRepository = passwordResetOtpRepository;
         this.emailService = emailService;
         this.passwordEncoder = passwordEncoder;
