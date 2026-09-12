@@ -51,6 +51,13 @@ public class AuthController {
         return ResponseEntity.ok(ApiResponse.ok(user));
     }
 
+    @GetMapping("/check-email")
+    @Operation(summary = "Check if an email is already registered")
+    public ResponseEntity<ApiResponse<Map<String, Boolean>>> checkEmail(@RequestParam("email") String email) {
+        boolean exists = authService.checkEmailExists(email);
+        return ResponseEntity.ok(ApiResponse.ok(Map.of("exists", exists, "available", !exists)));
+    }
+
     @PostMapping("/refresh")
     @Operation(summary = "Refresh access token")
     public ResponseEntity<ApiResponse<Map<String, String>>> refresh(@AuthenticationPrincipal UserPrincipal principal) {

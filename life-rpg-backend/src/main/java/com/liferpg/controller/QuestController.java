@@ -55,6 +55,7 @@ public class QuestController {
 
         // Composite response for Adventure Page and general quest board
         Map<String, Object> composite = new HashMap<>();
+        composite.put("allQuests", questService.getAllQuests(userId));
         composite.put("featuredQuest", questService.getFeaturedQuest(userId));
         composite.put("continueQuests", questService.getContinueQuests(userId));
         composite.put("recommendedQuests", questService.getRecommendedQuests(userId));

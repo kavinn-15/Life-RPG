@@ -6,6 +6,12 @@
 // domainData.js / achievementData.js so shop tabs and item badges drop
 // straight into className props.
 
+import midnightAuroraImg from '../assets/item-midnight-aurora.png';
+import gildedFrameImg from '../assets/item-gilded-frame.png';
+import noviceVanguardImg from '../assets/item-novice-vanguard.png';
+import bronzeBadgeImg from '../assets/item-bronze-badge.png';
+import laurelWreathImg from '../assets/item-laurel-wreath.png';
+
 export const REWARD_CATEGORY_META = {
   Theme: {
     icon: 'palette',
@@ -69,6 +75,7 @@ export const rewards = [
     category: 'Theme',
     price: 450,
     owned: true,
+    image: midnightAuroraImg,
   },
   {
     id: 'theme-sunfire-dawn',
@@ -98,6 +105,7 @@ export const rewards = [
     category: 'Avatar Frame',
     price: 250,
     owned: true,
+    image: gildedFrameImg,
   },
   {
     id: 'frame-obsidian',
@@ -127,6 +135,7 @@ export const rewards = [
     category: 'Title',
     price: 350,
     owned: true,
+    image: noviceVanguardImg,
   },
   {
     id: 'title-technomancer',
@@ -165,6 +174,7 @@ export const rewards = [
     category: 'Badge',
     price: 200,
     owned: true,
+    image: bronzeBadgeImg,
   },
   {
     id: 'badge-streak-sentinel',
@@ -212,6 +222,7 @@ export const rewards = [
     category: 'Profile Decoration',
     price: 400,
     owned: true,
+    image: laurelWreathImg,
   },
 
   // --- XP Boost effects ---

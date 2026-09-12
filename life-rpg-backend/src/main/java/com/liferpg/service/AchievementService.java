@@ -26,17 +26,23 @@ public class AchievementService {
     private final AttributeRepository attributeRepository;
     private final NotificationService notificationService;
     private final com.liferpg.repository.UserRepository userRepository;
+    private final com.liferpg.repository.CharacterRepository characterRepository;
+    private final LevelService levelService;
 
     public AchievementService(AchievementRepository achievementRepository,
                               UserAchievementRepository userAchievementRepository,
                               AttributeRepository attributeRepository,
                               NotificationService notificationService,
-                              com.liferpg.repository.UserRepository userRepository) {
+                              com.liferpg.repository.UserRepository userRepository,
+                              com.liferpg.repository.CharacterRepository characterRepository,
+                              LevelService levelService) {
         this.achievementRepository = achievementRepository;
         this.userAchievementRepository = userAchievementRepository;
         this.attributeRepository = attributeRepository;
         this.notificationService = notificationService;
         this.userRepository = userRepository;
+        this.characterRepository = characterRepository;
+        this.levelService = levelService;
     }
 
     @Transactional
@@ -102,13 +108,40 @@ public class AchievementService {
         Achievement a = achievementRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Achievement not found: " + id));
 
-        UserAchievement ua = userAchievementRepository.findByUserAndAchievement(user, a)
-                .orElseGet(() -> new UserAchievement(user, a, a.getTarget(), true, LocalDateTime.now()));
+        Optional<UserAchievement> uaOpt = userAchievementRepository.findByUserAndAchievement(user, a);
+        boolean alreadyUnlocked = uaOpt.map(UserAchievement::isUnlocked).orElse(false);
+
+        UserAchievement ua = uaOpt.orElseGet(() -> new UserAchievement(user, a, a.getTarget(), true, LocalDateTime.now()));
 
         ua.setUnlocked(true);
         ua.setProgress(a.getTarget());
         ua.setUnlockedAt(LocalDateTime.now());
         userAchievementRepository.save(ua);
+
+        if (!alreadyUnlocked) {
+            Character character = characterRepository.findByUserId(user.getId()).orElse(null);
+            if (character != null) {
+                if (a.getRewardGold() > 0) {
+                    character.setGold(character.getGold() + a.getRewardGold());
+                }
+                if (a.getRewardXp() > 0) {
+                    boolean leveledUp = levelService.processXpGain(character, a.getRewardXp());
+                    if (leveledUp) {
+                        notificationService.createNotification(
+                                user,
+                                NotificationType.level_up,
+                                "Ascended to Level " + character.getLevel() + "!",
+                                "Achievement mastery propelled you to Level " + character.getLevel() + "!",
+                                "military_tech",
+                                "text-secondary-container bg-secondary-fixed",
+                                "/character",
+                                "View Sheet"
+                        );
+                    }
+                }
+                characterRepository.save(character);
+            }
+        }
 
         notificationService.createNotification(
                 user,
@@ -153,6 +186,8 @@ public class AchievementService {
         Map<String, Attribute> attrMap = attributes.stream()
                 .collect(Collectors.toMap(Attribute::getAttributeKey, a -> a, (a, b) -> a));
 
+        boolean characterModified = false;
+
         for (Achievement a : all) {
             UserAchievement ua = userAchievementRepository.findByUserAndAchievement(user, a)
                     .orElseGet(() -> new UserAchievement(user, a, 0, false, null));
@@ -167,6 +202,17 @@ public class AchievementService {
                 ua.setUnlockedAt(LocalDateTime.now());
                 newlyUnlocked.add(a.getTitle());
 
+                if (character != null) {
+                    if (a.getRewardGold() > 0) {
+                        character.setGold(character.getGold() + a.getRewardGold());
+                        characterModified = true;
+                    }
+                    if (a.getRewardXp() > 0) {
+                        levelService.processXpGain(character, a.getRewardXp());
+                        characterModified = true;
+                    }
+                }
+
                 notificationService.createNotification(
                         user,
                         NotificationType.achievement_unlocked,
@@ -179,6 +225,10 @@ public class AchievementService {
                 );
             }
             userAchievementRepository.save(ua);
+        }
+
+        if (characterModified && character != null) {
+            characterRepository.save(character);
         }
 
         return newlyUnlocked;

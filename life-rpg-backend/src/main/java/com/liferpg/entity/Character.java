@@ -62,6 +62,9 @@ public class Character {
     @Column(name = "avatar_class")
     private String avatarClass = "cyber-nomad";
 
+    @Column(name = "avatar_url", columnDefinition = "LONGTEXT")
+    private String avatarUrl;
+
     @Column(name = "favorite_domains")
     private String favoriteDomains = "programming,fitness,reading,finance";
 
@@ -83,7 +86,7 @@ public class Character {
     public Character() {}
 
     public Character(User user) {
-        this(user, "Alex Mercer", "Novice Adventurer");
+        this(user, (user != null && user.getName() != null && !user.getName().isBlank()) ? user.getName() : "Adventurer", "Novice Adventurer");
     }
 
     public Character(User user, String playerName, String title) {
@@ -158,6 +161,9 @@ public class Character {
 
     public String getAvatarClass() { return avatarClass; }
     public void setAvatarClass(String avatarClass) { this.avatarClass = avatarClass; }
+
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
     public String getFavoriteDomains() { return favoriteDomains; }
     public void setFavoriteDomains(String favoriteDomains) { this.favoriteDomains = favoriteDomains; }

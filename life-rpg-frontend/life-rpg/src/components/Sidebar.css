@@ -1,0 +1,312 @@
+/* Life RPG Sidebar - Accurate to the reference design */
+
+.rpg-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 260px;
+  background: #090c1a;
+  background: linear-gradient(180deg, #090c1a 0%, #0b0f22 45%, #0e122b 100%);
+  z-index: 50;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 20px 14px 16px;
+  border-right: 1px solid rgba(99, 102, 241, 0.12);
+  box-shadow: 4px 0 24px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Atmospheric Night Silhouette Backdrop at Lower Section */
+.rpg-sidebar-scenery {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 380px;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.85;
+}
+
+.rpg-sidebar-scenery-svg {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Sidebar Scrollable Body */
+.rpg-sidebar-scroll {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 2px;
+  margin-right: -2px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rpg-sidebar-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.rpg-sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.rpg-sidebar-scroll::-webkit-scrollbar-thumb {
+  background: rgba(99, 102, 241, 0.2);
+  border-radius: 4px;
+}
+
+.rpg-sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.4);
+}
+
+/* Header / Brand Area */
+.rpg-sidebar-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 4px 8px 4px;
+  text-decoration: none;
+  transition: opacity 0.15s ease;
+}
+
+.rpg-sidebar-header:hover {
+  opacity: 0.95;
+}
+
+.rpg-brand-img {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.45);
+  flex-shrink: 0;
+}
+
+.rpg-brand-title {
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-weight: 800;
+  font-size: 19px;
+  color: #ffffff;
+  letter-spacing: -0.01em;
+  line-height: 1.15;
+}
+
+.rpg-brand-tagline {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 9.5px;
+  color: #5be6a1;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  margin-top: 2px;
+  display: block;
+}
+
+/* Nav Menu */
+.rpg-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5px;
+}
+
+.rpg-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 9px 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  color: #94a3b8;
+  transition: all 0.18s ease;
+  position: relative;
+}
+
+.rpg-nav-item:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.rpg-nav-item:hover .rpg-nav-icon {
+  color: #ffffff;
+  transform: translateX(1px);
+}
+
+.rpg-nav-item.active {
+  background: linear-gradient(90deg, #4f46e5 0%, #6366f1 55%, #7c3aed 100%);
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 4px 18px rgba(99, 102, 241, 0.42), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+}
+
+.rpg-nav-icon {
+  font-size: 20px;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.rpg-nav-label {
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+/* Motivational Progress Widget Card */
+.rpg-sidebar-widget {
+  background: rgba(13, 17, 36, 0.78);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+}
+
+.rpg-widget-quote-row {
+  padding: 13px 14px 11px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rpg-widget-avatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(99, 102, 241, 0.4);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rpg-widget-quote-text {
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-style: italic;
+  font-size: 12px;
+  color: #e2e8f0;
+  line-height: 1.35;
+  font-weight: 500;
+  margin: 0;
+}
+
+.rpg-widget-progress-section {
+  padding: 10px 14px 13px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  background: rgba(8, 11, 24, 0.35);
+}
+
+.rpg-widget-progress-info {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 11.5px;
+  font-family: 'Manrope', sans-serif;
+}
+
+.rpg-widget-progress-label {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 11.5px;
+}
+
+.rpg-widget-progress-count {
+  color: #94a3b8;
+  font-weight: 600;
+  font-size: 11.5px;
+}
+
+.rpg-widget-track {
+  width: 100%;
+  height: 7.5px;
+  background: rgba(20, 25, 52, 0.85);
+  border-radius: 9999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.rpg-widget-fill {
+  height: 100%;
+  border-radius: 9999px;
+  background: #6366f1;
+  box-shadow: 0 0 10px rgba(99, 102, 241, 0.8);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Bottom Toolbar */
+.rpg-sidebar-footer {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 6px 0;
+  margin-top: 6px;
+}
+
+.rpg-footer-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-decoration: none;
+  position: relative;
+  transition: all 0.18s ease;
+}
+
+.rpg-footer-btn:hover {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.06);
+  transform: translateY(-1px);
+}
+
+.rpg-footer-btn.active {
+  color: #ffffff;
+  background: rgba(99, 102, 241, 0.2);
+}
+
+.rpg-footer-btn-danger:hover {
+  color: #ff5c77;
+  background: rgba(255, 92, 119, 0.12);
+}
+
+.rpg-notif-dot {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ff3b5c;
+  box-shadow: 0 0 8px #ff3b5c;
+}

@@ -10,6 +10,7 @@ public class CharacterUpdateRequestDTO {
     private String preferredDifficulty;
     private String mainObjective;
     private String avatarClass;
+    private String avatarUrl;
     private List<String> favoriteDomains;
 
     public CharacterUpdateRequestDTO() {}
@@ -34,6 +35,9 @@ public class CharacterUpdateRequestDTO {
 
     public String getAvatarClass() { return avatarClass; }
     public void setAvatarClass(String avatarClass) { this.avatarClass = avatarClass; }
+
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
     public List<String> getFavoriteDomains() { return favoriteDomains; }
     public void setFavoriteDomains(List<String> favoriteDomains) { this.favoriteDomains = favoriteDomains; }
