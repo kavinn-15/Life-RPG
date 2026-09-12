@@ -1,0 +1,85 @@
+# ==========================================
+# Dependencies & Package Managers
+# ==========================================
+**/node_modules/
+**/.pnp
+**/.pnp.js
+package-lock.json.bak
+
+# ==========================================
+# Build Outputs & Bundles
+# ==========================================
+# Frontend (Vite / React)
+**/dist/
+**/dist-ssr/
+**/build/
+*.tsbuildinfo
+
+# Backend (Maven / Java / Spring Boot)
+**/target/
+**/*.class
+**/*.jar
+**/*.war
+**/*.ear
+**/*.nar
+
+# ==========================================
+# Environment Variables & Sensitive Configs
+# ==========================================
+**/.env
+**/.env.local
+**/.env.development.local
+**/.env.test.local
+**/.env.production.local
+**/*.key
+**/*.pem
+**/application-secret*.properties
+**/application-local*.properties
+
+# (Optional test payload / temporary JSON files)
+**/test_login.json
+
+# ==========================================
+# Logs & Diagnostic Files
+# ==========================================
+*.log
+**/logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# ==========================================
+# IDE & Code Editor Metadata
+# ==========================================
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# IntelliJ IDEA / WebStorm / Eclipse
+.idea/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+.factorypath
+bin/
+
+# ==========================================
+# OS-Specific Cache Files
+# ==========================================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
