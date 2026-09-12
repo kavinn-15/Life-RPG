@@ -1,0 +1,26 @@
+# Maven build artifacts
+**/target/
+**/*.class
+*.jar
+*.war
+*.ear
+
+# Node dependencies & builds
+**/node_modules/
+**/dist/
+
+# Archive files
+*.zip
+*.tar.gz
+
+# IDE & Editor files
+.idea/
+*.iml
+.project
+.classpath
+.settings/
+
+# OS & Log files
+.DS_Store
+Thumbs.db
+*.log
