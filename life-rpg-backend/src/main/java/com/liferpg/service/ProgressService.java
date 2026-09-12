@@ -163,7 +163,7 @@ public class ProgressService {
 
             if (i == 0 && mXp == 0 && character.getTotalXp() > 0) {
                 mXp = (int) character.getTotalXp();
-                mGold = character.getGold();
+                mGold = (int) character.getGold();
                 mQuests = completedQuests.size();
             }
 

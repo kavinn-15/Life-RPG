@@ -30,13 +30,13 @@ public class DailyMissionService {
     private final XpHistoryRepository xpHistoryRepository;
 
     public DailyMissionService(DailyMissionRepository dailyMissionRepository,
-                               DailyMissionProgressRepository dailyMissionProgressRepository,
-                               CharacterRepository characterRepository,
-                               QuestRepository questRepository,
-                               LevelService levelService,
-                               NotificationService notificationService,
-                               GoldTransactionRepository goldTransactionRepository,
-                               XpHistoryRepository xpHistoryRepository) {
+            DailyMissionProgressRepository dailyMissionProgressRepository,
+            CharacterRepository characterRepository,
+            QuestRepository questRepository,
+            LevelService levelService,
+            NotificationService notificationService,
+            GoldTransactionRepository goldTransactionRepository,
+            XpHistoryRepository xpHistoryRepository) {
         this.dailyMissionRepository = dailyMissionRepository;
         this.dailyMissionProgressRepository = dailyMissionProgressRepository;
         this.characterRepository = characterRepository;
@@ -69,24 +69,23 @@ public class DailyMissionService {
                 .toList();
 
         int completedQuestsTodayCount = Math.max(completedTodayQuests.size(), character.getQuestsCompletedToday());
-        int totalDailyQuests = (int) allUserQuests.stream().filter(Quest::isDaily).count();
-        if (totalDailyQuests <= 0) {
-            totalDailyQuests = Math.max(1, allUserQuests.size());
-        }
+        int dailyCount = (int) allUserQuests.stream().filter(Quest::isDaily).count();
+        int totalDailyQuests = dailyCount > 0 ? dailyCount : Math.max(1, allUserQuests.size());
 
         // Real XP gained today
         Long xpGainedTodaySum = xpHistoryRepository.sumXpByUserIdAndCreatedAtAfter(userId, startOfDay);
-        int xpGainedToday = xpGainedTodaySum != null ? xpGainedTodaySum.intValue() :
-                completedTodayQuests.stream().mapToInt(Quest::getXpReward).sum();
+        int xpGainedToday = xpGainedTodaySum != null ? xpGainedTodaySum.intValue()
+                : completedTodayQuests.stream().mapToInt(Quest::getXpReward).sum();
 
         // Real Gold gained today
         Long goldGainedTodaySum = goldTransactionRepository.sumEarnedGoldByUserIdAndCreatedAtAfter(userId, startOfDay);
-        int goldGainedToday = goldGainedTodaySum != null ? goldGainedTodaySum.intValue() :
-                completedTodayQuests.stream().mapToInt(Quest::getGoldReward).sum();
+        int goldGainedToday = goldGainedTodaySum != null ? goldGainedTodaySum.intValue()
+                : completedTodayQuests.stream().mapToInt(Quest::getGoldReward).sum();
 
         // Real distinct domains progressed today
         long distinctDomainsCount = completedTodayQuests.stream()
-                .map(q -> q.getDomain() != null ? q.getDomain().getId() : (q.getDomainName() != null ? q.getDomainName() : ""))
+                .map(q -> q.getDomain() != null ? q.getDomain().getId()
+                        : (q.getDomainName() != null ? q.getDomainName() : ""))
                 .filter(d -> !d.isBlank())
                 .distinct()
                 .count();
@@ -112,7 +111,8 @@ public class DailyMissionService {
                     .orElseGet(() -> new DailyMissionProgress(character.getUser(), m, today, 0, false, false));
 
             int current = deriveCurrent(m, completedQuestsTodayCount, xpGainedToday,
-                    goldGainedToday, (int) distinctDomainsCount, (int) morningQuestsCount, (int) completedMilestonesCount);
+                    goldGainedToday, (int) distinctDomainsCount, (int) morningQuestsCount,
+                    (int) completedMilestonesCount);
 
             int target = m.getTarget() != null && m.getTarget() > 0 ? m.getTarget() : totalDailyQuests;
             boolean completed = current >= target;
@@ -139,7 +139,7 @@ public class DailyMissionService {
     }
 
     private int deriveCurrent(DailyMission m, int completedQuestsToday, int xpToday,
-                              int goldToday, int domainsToday, int morningQuests, int completedMilestones) {
+            int goldToday, int domainsToday, int morningQuests, int completedMilestones) {
         String id = m.getId() != null ? m.getId().toLowerCase() : "";
         String source = m.getSource() != null ? m.getSource() : "";
 
@@ -150,7 +150,8 @@ public class DailyMissionService {
         if ("dailyQuestsRatio".equalsIgnoreCase(source) || id.contains("full-house")) {
             return completedQuestsToday;
         }
-        if ("todayXp".equalsIgnoreCase(source) || id.contains("xp-surge") || id.contains("surge") || id.contains("xp")) {
+        if ("todayXp".equalsIgnoreCase(source) || id.contains("xp-surge") || id.contains("surge")
+                || id.contains("xp")) {
             return xpToday;
         }
         if ("todayGold".equalsIgnoreCase(source) || id.contains("gold-rush") || id.contains("gold")) {
@@ -202,7 +203,8 @@ public class DailyMissionService {
         characterRepository.save(character);
 
         // Audit transactions
-        xpHistoryRepository.save(new XpHistory(character.getUser(), "MISSION", mission.getId(), mission.getRewardXp(), null, null));
+        xpHistoryRepository.save(
+                new XpHistory(character.getUser(), "MISSION", mission.getId(), mission.getRewardXp(), null, null));
         if (mission.getRewardGold() > 0) {
             goldTransactionRepository.save(new GoldTransaction(
                     character.getUser(),
@@ -211,8 +213,7 @@ public class DailyMissionService {
                     character.getGold(),
                     "MISSION",
                     mission.getId(),
-                    "Completed daily mission: " + mission.getTitle()
-            ));
+                    "Completed daily mission: " + mission.getTitle()));
         }
 
         notificationService.createNotification(
@@ -223,8 +224,7 @@ public class DailyMissionService {
                 mission.getIcon(),
                 "text-primary bg-primary-fixed",
                 "/daily-missions",
-                "View Missions"
-        );
+                "View Missions");
 
         DailyMissionResponseDTO dto = new DailyMissionResponseDTO();
         dto.setId(mission.getId());
