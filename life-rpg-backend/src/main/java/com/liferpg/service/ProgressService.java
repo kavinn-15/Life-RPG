@@ -25,11 +25,11 @@ public class ProgressService {
     private final XpHistoryRepository xpHistoryRepository;
 
     public ProgressService(CharacterRepository characterRepository,
-                           QuestRepository questRepository,
-                           AttributeRepository attributeRepository,
-                           UserDomainRepository userDomainRepository,
-                           StreakLogRepository streakLogRepository,
-                           XpHistoryRepository xpHistoryRepository) {
+            QuestRepository questRepository,
+            AttributeRepository attributeRepository,
+            UserDomainRepository userDomainRepository,
+            StreakLogRepository streakLogRepository,
+            XpHistoryRepository xpHistoryRepository) {
         this.characterRepository = characterRepository;
         this.questRepository = questRepository;
         this.attributeRepository = attributeRepository;
@@ -49,10 +49,12 @@ public class ProgressService {
 
         ProgressHistoryResponseDTO dto = new ProgressHistoryResponseDTO();
 
-        // 1. Weekly XP History (Calculated dynamically from real completed quests & XP history)
+        // 1. Weekly XP History (Calculated dynamically from real completed quests & XP
+        // history)
         dto.setWeeklyXpHistory(buildWeeklyXp(character, completedQuests, xpHistories));
 
-        // 2. Monthly XP History (Calculated dynamically from real completed quests & XP history)
+        // 2. Monthly XP History (Calculated dynamically from real completed quests & XP
+        // history)
         dto.setMonthlyXpHistory(buildMonthlyXp(character, completedQuests, xpHistories));
 
         // 3. Top Domains By XP
@@ -70,8 +72,11 @@ public class ProgressService {
         // 7. Quest Completion Stats
         int completed = completedQuests.size();
         int total = allQuests.size();
-        double rate = total > 0 ? Math.round(((double) completed / total) * 1000.0) / 10.0 : (completed > 0 ? 100.0 : 0.0);
-        double avgPerDay = completed > 0 ? Math.round(((double) completed / Math.max(1, character.getCurrentStreak())) * 10.0) / 10.0 : 0.0;
+        double rate = total > 0 ? Math.round(((double) completed / total) * 1000.0) / 10.0
+                : (completed > 0 ? 100.0 : 0.0);
+        double avgPerDay = completed > 0
+                ? Math.round(((double) completed / Math.max(1, character.getCurrentStreak())) * 10.0) / 10.0
+                : 0.0;
 
         dto.setQuestCompletionStats(new QuestCompletionStatsDTO(
                 completed,
@@ -80,8 +85,7 @@ public class ProgressService {
                 rate,
                 avgPerDay,
                 character.getCurrentStreak(),
-                character.getLongestStreak()
-        ));
+                character.getLongestStreak()));
 
         // 8. Level History
         List<LevelHistoryDTO> levels = new ArrayList<>();
@@ -100,7 +104,8 @@ public class ProgressService {
         return dto;
     }
 
-    private List<WeeklyXpDTO> buildWeeklyXp(Character character, List<Quest> completedQuests, List<XpHistory> xpHistories) {
+    private List<WeeklyXpDTO> buildWeeklyXp(Character character, List<Quest> completedQuests,
+            List<XpHistory> xpHistories) {
         List<WeeklyXpDTO> result = new ArrayList<>();
         LocalDate today = LocalDate.now();
         int totalWeeks = 8;
@@ -108,7 +113,8 @@ public class ProgressService {
         for (int i = totalWeeks - 1; i >= 0; i--) {
             LocalDate startOfWeek = today.minusWeeks(i).with(java.time.DayOfWeek.MONDAY);
             LocalDate endOfWeek = startOfWeek.plusDays(6);
-            String label = "W" + (totalWeeks - i) + " (" + startOfWeek.getMonth().name().substring(0, 3) + " " + String.format("%02d", startOfWeek.getDayOfMonth()) + ")";
+            String label = "W" + (totalWeeks - i) + " (" + startOfWeek.getMonth().name().substring(0, 3) + " "
+                    + String.format("%02d", startOfWeek.getDayOfMonth()) + ")";
 
             int weekXp = 0;
             int weekGold = 0;
@@ -125,7 +131,8 @@ public class ProgressService {
                 }
             }
 
-            // If current week (i == 0) and completedQuests had no specific timestamps yet but character has XP
+            // If current week (i == 0) and completedQuests had no specific timestamps yet
+            // but character has XP
             if (i == 0 && weekXp == 0 && character.getCurrentXp() > 0) {
                 weekXp = (int) Math.min(character.getCurrentXp(), 2000L);
                 weekGold = (int) Math.min(character.getGold(), 1000L);
@@ -139,7 +146,8 @@ public class ProgressService {
         return result;
     }
 
-    private List<MonthlyXpDTO> buildMonthlyXp(Character character, List<Quest> completedQuests, List<XpHistory> xpHistories) {
+    private List<MonthlyXpDTO> buildMonthlyXp(Character character, List<Quest> completedQuests,
+            List<XpHistory> xpHistories) {
         List<MonthlyXpDTO> result = new ArrayList<>();
         LocalDate today = LocalDate.now();
 
@@ -154,7 +162,8 @@ public class ProgressService {
             int mQuests = 0;
 
             for (Quest q : completedQuests) {
-                if (q.getCompletedAt() != null && q.getCompletedAt().getYear() == year && q.getCompletedAt().getMonthValue() == monthValue) {
+                if (q.getCompletedAt() != null && q.getCompletedAt().getYear() == year
+                        && q.getCompletedAt().getMonthValue() == monthValue) {
                     mXp += q.getXpReward();
                     mGold += q.getGoldReward();
                     mQuests++;
@@ -182,8 +191,8 @@ public class ProgressService {
                         ud.getDomain().getId(),
                         ud.getTotalXp(),
                         ud.getDomain().getAccent() != null ? ud.getDomain().getAccent() : "#6c5ce7",
-                        ud.getDomain().getIcon()
-                )).collect(Collectors.toList());
+                        ud.getDomain().getIcon()))
+                .collect(Collectors.toList());
     }
 
     private List<AttributeGrowthDTO> buildAttributeGrowth(Long userId) {
@@ -194,15 +203,14 @@ public class ProgressService {
                     a.getDisplayName(),
                     current,
                     previous,
-                    100
-            );
+                    100);
         }).collect(Collectors.toList());
     }
 
     private List<HeatmapEntryDTO> buildHeatmap(List<Quest> completedQuests) {
         Map<String, Map<String, Integer>> grid = new LinkedHashMap<>();
-        String[] days = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
-        String[] times = {"Morning", "Afternoon", "Evening", "Night"};
+        String[] days = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
+        String[] times = { "Morning", "Afternoon", "Evening", "Night" };
 
         for (String d : days) {
             grid.put(d, new HashMap<>());
@@ -216,9 +224,8 @@ public class ProgressService {
                 String day = q.getCompletedAt().getDayOfWeek().name().substring(0, 3);
                 day = day.substring(0, 1).toUpperCase() + day.substring(1).toLowerCase();
                 int hour = q.getCompletedAt().getHour();
-                String timeSlot = (hour >= 5 && hour < 12) ? "Morning" :
-                                  (hour >= 12 && hour < 17) ? "Afternoon" :
-                                  (hour >= 17 && hour < 22) ? "Evening" : "Night";
+                String timeSlot = (hour >= 5 && hour < 12) ? "Morning"
+                        : (hour >= 12 && hour < 17) ? "Afternoon" : (hour >= 17 && hour < 22) ? "Evening" : "Night";
 
                 if (grid.containsKey(day)) {
                     grid.get(day).put(timeSlot, grid.get(day).getOrDefault(timeSlot, 0) + 1);
@@ -239,7 +246,7 @@ public class ProgressService {
     }
 
     private List<DayOfWeekStatDTO> buildDayOfWeekStats(List<Quest> completedQuests) {
-        String[] days = {"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
+        String[] days = { "Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun" };
         Map<String, Integer> countMap = new LinkedHashMap<>();
         Map<String, Integer> xpMap = new LinkedHashMap<>();
 
@@ -272,7 +279,8 @@ public class ProgressService {
     private StreakHistoryDTO buildStreakHistory(Long userId, Character character) {
         LocalDate today = LocalDate.now();
         LocalDate startDate = today.minusDays(29);
-        List<StreakLog> logs = streakLogRepository.findByUserIdAndActivityDateBetweenOrderByActivityDateAsc(userId, startDate, today);
+        List<StreakLog> logs = streakLogRepository.findByUserIdAndActivityDateBetweenOrderByActivityDateAsc(userId,
+                startDate, today);
         Set<LocalDate> activeDates = logs.stream().map(StreakLog::getActivityDate).collect(Collectors.toSet());
 
         List<Integer> last30Days = new ArrayList<>(30);
@@ -300,7 +308,6 @@ public class ProgressService {
                 new StreakMilestoneDTO(14, "Steady Flame", "local_fire_department", "Streak Sentinel Badge"),
                 new StreakMilestoneDTO(30, "Bonfire", "whatshot", "Streak Vanguard Medal"),
                 new StreakMilestoneDTO(60, "Wildfire", "local_fire_department", "Wildfire Title"),
-                new StreakMilestoneDTO(100, "Eternal Flame", "bolt", "Unbreakable Medal")
-        );
+                new StreakMilestoneDTO(100, "Eternal Flame", "bolt", "Unbreakable Medal"));
     }
 }

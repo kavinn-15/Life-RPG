@@ -32,7 +32,6 @@ public class EmailService {
      */
     public void sendOtpEmail(String toEmail, String otp, String name) {
         String subject = "⚔️ Life RPG - Your Password Reset Verification Code: " + otp;
-        String htmlContent = buildOtpHtmlEmail(name, otp);
 
         logger.info("=================================================================");
         logger.info("🔐 LIFE RPG PASSWORD RESET OTP FOR [{}]: {}", toEmail, otp);
@@ -44,6 +43,7 @@ public class EmailService {
         }
 
         try {
+            String htmlContent = buildOtpHtmlEmail(name, otp);
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
@@ -65,7 +65,7 @@ public class EmailService {
 
     private String buildOtpHtmlEmail(String name, String otp) {
         String displayName = (name != null && !name.isBlank()) ? name : "Adventurer";
-        return """
+        String template = """
             <!DOCTYPE html>
             <html lang="en">
             <head>
@@ -96,14 +96,14 @@ public class EmailService {
                   <p>Gatekeeper Authentication Protocol</p>
                 </div>
                 <div class="content">
-                  <div class="greeting">Greetings, %s!</div>
+                  <div class="greeting">Greetings, {{NAME}}!</div>
                   <div class="desc">
                     A password reset request was initiated for your Life RPG adventurer account. Use the one-time verification code below to authorize your portal access and set a new password.
                   </div>
                   
                   <div class="otp-box">
                     <div class="otp-title">Your 6-Digit Verification Code</div>
-                    <div class="otp-code">%s</div>
+                    <div class="otp-code">{{OTP}}</div>
                     <div class="expiry-badge">⏱️ Expires in 15 Minutes</div>
                   </div>
 
@@ -117,6 +117,7 @@ public class EmailService {
               </div>
             </body>
             </html>
-            """.formatted(displayName, otp);
+            """;
+        return template.replace("{{NAME}}", displayName).replace("{{OTP}}", otp);
     }
 }
