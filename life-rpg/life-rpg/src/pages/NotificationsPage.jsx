@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useGame } from '../state/GameContext';
 
@@ -10,9 +10,34 @@ const FILTERS = [
   { key: 'loot', label: 'Loot & Shop' },
 ];
 
+function formatTime(notif) {
+  if (notif.timestamp && notif.timestamp !== 'Just now' && !notif.timestamp.includes('ago') && !notif.timestamp.includes('Yesterday')) {
+    return notif.timestamp;
+  }
+  const rawDate = notif.date || notif.createdAt;
+  if (!rawDate) return notif.timestamp || 'Just now';
+
+  try {
+    const d = new Date(rawDate);
+    if (isNaN(d.getTime())) return notif.timestamp || 'Just now';
+
+    const now = new Date();
+    const diffSec = Math.floor((now.getTime() - d.getTime()) / 1000);
+
+    if (diffSec < 45) return 'Just now';
+    if (diffSec < 3600) return `${Math.floor(diffSec / 60)}m ago`;
+    if (diffSec < 86400) return `${Math.floor(diffSec / 3600)}h ago`;
+    if (diffSec < 172800) return 'Yesterday';
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  } catch {
+    return notif.timestamp || 'Just now';
+  }
+}
+
 export default function NotificationsPage() {
   const {
     notifications,
+    refreshNotifications,
     markNotificationRead,
     markAllNotificationsRead,
     clearNotifications,
@@ -20,6 +45,21 @@ export default function NotificationsPage() {
   } = useGame();
 
   const [activeFilter, setActiveFilter] = useState('all');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (refreshNotifications) {
+      refreshNotifications();
+    }
+  }, [refreshNotifications]);
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    if (refreshNotifications) {
+      await refreshNotifications();
+    }
+    setTimeout(() => setIsRefreshing(false), 500);
+  };
 
   const filteredNotifications = notifications.filter((notif) => {
     if (activeFilter === 'unread') return !notif.read;
@@ -61,11 +101,22 @@ export default function NotificationsPage() {
         </div>
 
         {/* Global actions */}
-        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0">
+        <div className="flex items-center gap-2 self-start sm:self-auto shrink-0 flex-wrap">
+          <button
+            onClick={handleManualRefresh}
+            disabled={isRefreshing}
+            className="px-3.5 py-2 rounded-full bg-surface-container-lowest hover:bg-surface-container text-on-surface font-label-md text-xs shadow-sm border border-outline/10 transition-all flex items-center gap-1.5 cursor-pointer"
+            title="Fetch latest dispatches from server"
+          >
+            <span className={`material-symbols-outlined text-sm ${isRefreshing ? 'animate-spin' : ''}`}>
+              refresh
+            </span>
+            Refresh Feed
+          </button>
           {unreadNotificationsCount > 0 && (
             <button
               onClick={markAllNotificationsRead}
-              className="px-3.5 py-2 rounded-full bg-surface-container-lowest hover:bg-surface-container text-primary font-label-md text-xs shadow-sm border border-outline/10 transition-all flex items-center gap-1.5"
+              className="px-3.5 py-2 rounded-full bg-surface-container-lowest hover:bg-surface-container text-primary font-label-md text-xs shadow-sm border border-outline/10 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <span className="material-symbols-outlined text-sm">done_all</span>
               Mark All Read
@@ -74,7 +125,7 @@ export default function NotificationsPage() {
           {notifications.length > 0 && (
             <button
               onClick={clearNotifications}
-              className="px-3.5 py-2 rounded-full bg-surface-container-lowest hover:bg-error/10 hover:text-error text-on-surface-variant font-label-md text-xs shadow-sm border border-outline/10 transition-all flex items-center gap-1.5"
+              className="px-3.5 py-2 rounded-full bg-surface-container-lowest hover:bg-error/10 hover:text-error text-on-surface-variant font-label-md text-xs shadow-sm border border-outline/10 transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <span className="material-symbols-outlined text-sm">delete_sweep</span>
               Clear All
@@ -91,7 +142,7 @@ export default function NotificationsPage() {
             <button
               key={f.key}
               onClick={() => setActiveFilter(f.key)}
-              className={`px-4 py-2 rounded-full font-label-md text-xs whitespace-nowrap transition-all ${
+              className={`px-4 py-2 rounded-full font-label-md text-xs whitespace-nowrap transition-all cursor-pointer ${
                 isActive
                   ? 'bg-primary-container text-on-primary font-bold shadow-sm'
                   : 'bg-surface-container-lowest text-on-surface-variant hover:text-on-surface hover:bg-surface-container border border-outline/5'
@@ -162,7 +213,7 @@ export default function NotificationsPage() {
                   </p>
                   <span className="font-label-caps text-[11px] text-outline mt-1.5 flex items-center gap-1">
                     <span className="material-symbols-outlined text-xs">schedule</span>
-                    {notif.timestamp}
+                    {formatTime(notif)}
                   </span>
                 </div>
               </div>

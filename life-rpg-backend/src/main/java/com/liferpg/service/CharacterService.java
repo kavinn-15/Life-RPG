@@ -77,6 +77,9 @@ public class CharacterService {
         if (req.getAvatarClass() != null) {
             character.setAvatarClass(req.getAvatarClass());
         }
+        if (req.getAvatarUrl() != null) {
+            character.setAvatarUrl(req.getAvatarUrl());
+        }
 
         characterRepository.save(character);
         return getCharacter(userId);
@@ -235,6 +238,7 @@ public class CharacterService {
         dto.setPreferredDifficulty(c.getPreferredDifficulty());
         dto.setMainObjective(c.getMainObjective());
         dto.setAvatarClass(c.getAvatarClass());
+        dto.setAvatarUrl(c.getAvatarUrl());
         dto.setAttributes(attributes);
         return dto;
     }

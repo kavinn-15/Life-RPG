@@ -62,8 +62,12 @@ export default function OnboardingPage() {
 
       {/* Brand */}
       <div className="flex items-center gap-3 mb-6 z-10">
-        <div className="w-10 h-10 rounded-2xl bg-primary-container flex items-center justify-center shadow-[0_4px_0_#4029ba]">
-          <span className="material-symbols-outlined text-on-primary text-[24px]">swords</span>
+        <div className="w-11 h-11 rounded-2xl bg-ink-card border border-primary/40 flex items-center justify-center p-0.5 shadow-[0_0_20px_rgba(110,86,248,0.4)] overflow-hidden">
+          <img
+            src="/logo.png"
+            alt="Life RPG Logo"
+            className="w-full h-full object-cover rounded-xl transform scale-110"
+          />
         </div>
         <span className="text-xl font-headline-md font-bold text-white tracking-tight">
           Life RPG Character Forge

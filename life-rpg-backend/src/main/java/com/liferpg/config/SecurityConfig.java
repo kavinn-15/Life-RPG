@@ -56,6 +56,7 @@ public class SecurityConfig {
                                 "/api/auth/check-email",
                                 "/api/health",
                                 "/api/leaderboard",
+                                "/api/guilds/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/api-docs/**",

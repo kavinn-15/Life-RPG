@@ -19,7 +19,7 @@ const DIFFICULTY_MULT = { Easy: 0.6, Medium: 1, Hard: 1.6, Epic: 2.4 };
 const TIME_MULT = { '15m': 0.5, '30m': 0.75, '60m': 1, '120m': 1.6 };
 
 export default function QuestForgePanel({ onQuestForged }) {
-  const { grantRewards, pushToast } = useGame();
+  const { grantRewards, addNotification, pushToast } = useGame();
   const [title, setTitle] = useState('Draft 20-Page Pitch Deck for Series A');
   const [domain, setDomain] = useState('finance');
   const [difficulty, setDifficulty] = useState('Medium');
@@ -57,6 +57,17 @@ export default function QuestForgePanel({ onQuestForged }) {
     try {
       const created = await questService.createQuest(payload);
       grantRewards({ xp: 20, gold: 10 });
+      if (addNotification) {
+        addNotification({
+          type: 'quest_forged',
+          title: `Quest Forged: ${created.title}`,
+          message: `Forged under ${activeDomain.label} (${difficulty}) with estimated time of ${time}.`,
+          icon: 'auto_fix_high',
+          iconColor: 'text-primary bg-primary-fixed',
+          actionUrl: `/quests`,
+          actionLabel: 'Quest Board',
+        });
+      }
       pushToast(`Quest forged: ${created.title} · +${xp} XP`, 'auto_awesome');
       if (onQuestForged) {
         onQuestForged(created);
@@ -64,6 +75,17 @@ export default function QuestForgePanel({ onQuestForged }) {
     } catch (err) {
       console.warn('Backend createQuest error, fallback to local:', err);
       grantRewards({ xp, gold });
+      if (addNotification) {
+        addNotification({
+          type: 'quest_forged',
+          title: `Quest Forged: ${questTitle}`,
+          message: `Forged under ${activeDomain.label} (${difficulty}) with estimated time of ${time}.`,
+          icon: 'auto_fix_high',
+          iconColor: 'text-primary bg-primary-fixed',
+          actionUrl: `/quests`,
+          actionLabel: 'Quest Board',
+        });
+      }
       pushToast(`Quest forged: ${questTitle} · +${xp} XP`, 'auto_awesome');
       if (onQuestForged) {
         onQuestForged({

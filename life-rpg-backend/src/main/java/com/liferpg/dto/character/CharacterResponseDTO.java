@@ -21,6 +21,7 @@ public class CharacterResponseDTO {
     private String preferredDifficulty;
     private String mainObjective;
     private String avatarClass;
+    private String avatarUrl;
     private List<AttributeResponseDTO> attributes;
 
     public CharacterResponseDTO() {}
@@ -78,6 +79,9 @@ public class CharacterResponseDTO {
 
     public String getAvatarClass() { return avatarClass; }
     public void setAvatarClass(String avatarClass) { this.avatarClass = avatarClass; }
+
+    public String getAvatarUrl() { return avatarUrl; }
+    public void setAvatarUrl(String avatarUrl) { this.avatarUrl = avatarUrl; }
 
     public List<AttributeResponseDTO> getAttributes() { return attributes; }
     public void setAttributes(List<AttributeResponseDTO> attributes) { this.attributes = attributes; }

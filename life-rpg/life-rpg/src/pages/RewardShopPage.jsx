@@ -93,6 +93,7 @@ export default function RewardShopPage() {
   const [loading, setLoading] = useState(true);
   const [rewards, setRewards] = useState([]);
   const [categoryTab, setCategoryTab] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
   const [pendingId, setPendingId] = useState(null);
   const [goldPulse, setGoldPulse] = useState(false);
 
@@ -108,10 +109,19 @@ export default function RewardShopPage() {
     };
   }, []);
 
-  const filtered = useMemo(
-    () => (categoryTab === 'All' ? rewards : rewards.filter((r) => r.category === categoryTab)),
-    [rewards, categoryTab]
-  );
+  const filtered = useMemo(() => {
+    let list = categoryTab === 'All' ? rewards : rewards.filter((r) => r.category === categoryTab);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(
+        (r) =>
+          (r.name || '').toLowerCase().includes(q) ||
+          (r.description || '').toLowerCase().includes(q) ||
+          (r.category || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [rewards, categoryTab, searchQuery]);
 
   const ownedCount = rewards.filter((r) => r.owned).length;
 
@@ -174,21 +184,35 @@ export default function RewardShopPage() {
         </div>
       </div>
 
-      <div className="flex bg-surface-container rounded-full p-1 gap-1 w-fit overflow-x-auto mb-6">
-        {CATEGORY_TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setCategoryTab(t.key)}
-            className={[
-              'px-4 py-2 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors',
-              categoryTab === t.key
-                ? 'bg-surface-container-lowest text-on-surface shadow-sm font-bold'
-                : 'text-on-surface-variant hover:text-on-surface',
-            ].join(' ')}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 mb-6">
+        <div className="flex bg-surface-container rounded-full p-1 gap-1 w-fit overflow-x-auto">
+          {CATEGORY_TABS.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setCategoryTab(t.key)}
+              className={[
+                'px-4 py-2 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors',
+                categoryTab === t.key
+                  ? 'bg-surface-container-lowest text-on-surface shadow-sm font-bold'
+                  : 'text-on-surface-variant hover:text-on-surface',
+              ].join(' ')}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <div className="relative flex items-center">
+          <span className="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">
+            search
+          </span>
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 pr-4 py-2 bg-surface-container-lowest rounded-full font-body-sm text-body-sm text-on-surface shadow-xs focus:outline-none focus:ring-2 focus:ring-primary-container transition-all w-full sm:w-56"
+            placeholder="Search loot or title..."
+            type="text"
+          />
+        </div>
       </div>
 
       {loading ? (

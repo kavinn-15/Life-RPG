@@ -97,6 +97,7 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(true);
   const [rewards, setRewards] = useState([]);
   const [tab, setTab] = useState('All');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -112,10 +113,22 @@ export default function InventoryPage() {
 
   const owned = useMemo(() => (Array.isArray(rewards) ? rewards.filter((r) => r?.owned) : []), [rewards]);
   const filtered = useMemo(() => {
-    if (tab === 'All') return owned;
-    const tabNorm = tab.toLowerCase().replace(/[\s_-]+/g, '');
-    return owned.filter((r) => String(r?.category || '').toLowerCase().replace(/[\s_-]+/g, '') === tabNorm);
-  }, [owned, tab]);
+    let list = owned;
+    if (tab !== 'All') {
+      const tabNorm = tab.toLowerCase().replace(/[\s_-]+/g, '');
+      list = owned.filter((r) => String(r?.category || '').toLowerCase().replace(/[\s_-]+/g, '') === tabNorm);
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(
+        (r) =>
+          (r.name || '').toLowerCase().includes(q) ||
+          (r.description || '').toLowerCase().includes(q) ||
+          (r.category || '').toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [owned, tab, searchQuery]);
   const equippedCount = Object.keys(equippedItems || {}).length;
 
   return (
@@ -157,21 +170,35 @@ export default function InventoryPage() {
         </div>
       </div>
 
-      <div className="flex bg-surface-container rounded-full p-1 gap-1 w-fit overflow-x-auto mb-6">
-        {CATEGORY_TABS.map((t) => (
-          <button
-            key={t.key}
-            onClick={() => setTab(t.key)}
-            className={[
-              'px-4 py-2 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors',
-              tab === t.key
-                ? 'bg-surface-container-lowest text-on-surface shadow-sm font-bold'
-                : 'text-on-surface-variant hover:text-on-surface',
-            ].join(' ')}
-          >
-            {t.label}
-          </button>
-        ))}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2 mb-6">
+        <div className="flex bg-surface-container rounded-full p-1 gap-1 w-fit overflow-x-auto">
+          {CATEGORY_TABS.map((t) => (
+            <button
+              key={t.key}
+              onClick={() => setTab(t.key)}
+              className={[
+                'px-4 py-2 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors',
+                tab === t.key
+                  ? 'bg-surface-container-lowest text-on-surface shadow-sm font-bold'
+                  : 'text-on-surface-variant hover:text-on-surface',
+              ].join(' ')}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+        <div className="relative flex items-center">
+          <span className="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">
+            search
+          </span>
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 pr-4 py-2 bg-surface-container-lowest rounded-full font-body-sm text-body-sm text-on-surface shadow-xs focus:outline-none focus:ring-2 focus:ring-primary-container transition-all w-full sm:w-56"
+            placeholder="Search backpack..."
+            type="text"
+          />
+        </div>
       </div>
 
       {loading ? (

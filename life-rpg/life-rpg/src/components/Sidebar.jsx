@@ -13,7 +13,6 @@ const NAV_ITEMS = [
   { to: '/achievements', label: 'Achievements', icon: 'emoji_events' },
   { to: '/loot-vault', label: 'Loot Vault', icon: 'redeem' },
   { to: '/inventory', label: 'Inventory', icon: 'backpack' },
-  { to: '/community', label: 'Community', icon: 'groups' },
   { to: '/settings', label: 'Settings', icon: 'settings' },
 ];
 
@@ -55,12 +54,16 @@ export default function Sidebar() {
       className="hidden lg:flex fixed left-0 top-0 h-screen w-[260px] bg-ink z-50 flex-col justify-between overflow-y-auto px-4 py-6 shadow-[0_12px_24px_-4px_rgba(20,19,43,0.18)]"
     >
       <div className="flex flex-col gap-6">
-        <Link to="/" className="flex items-center gap-3 px-2">
-          <div className="w-10 h-10 rounded-2xl bg-primary-container flex items-center justify-center shadow-[0_4px_0_#4029ba]">
-            <span className="material-symbols-outlined text-on-primary text-[24px]">swords</span>
+        <Link to="/" className="flex items-center gap-3 px-2 group">
+          <div className="w-11 h-11 rounded-2xl bg-ink-card border border-primary/40 flex items-center justify-center p-0.5 shadow-[0_0_15px_rgba(110,86,248,0.3)] group-hover:shadow-[0_0_20px_rgba(56,189,248,0.5)] group-hover:border-primary transition-all flex-shrink-0 overflow-hidden">
+            <img
+              src="/logo.png"
+              alt="Life RPG Logo"
+              className="w-full h-full object-cover rounded-xl transform scale-110 group-hover:scale-125 transition-transform duration-300"
+            />
           </div>
           <div className="flex flex-col">
-            <span className="text-headline-sm font-headline-sm text-white tracking-tight leading-none">
+            <span className="text-headline-sm font-headline-sm text-white tracking-tight leading-none group-hover:text-primary transition-colors">
               Life RPG
             </span>
             <span className="text-label-caps font-label-caps text-tertiary-fixed uppercase tracking-wider mt-1">

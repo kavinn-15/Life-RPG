@@ -123,11 +123,12 @@ function AchievementCard({ achievement, onSimulateUnlock }) {
 }
 
 export default function AchievementsPage() {
-  const { pushToast } = useGame();
+  const { pushToast, grantRewards } = useGame();
   const [loading, setLoading] = useState(true);
   const [achievements, setAchievements] = useState([]);
   const [categoryTab, setCategoryTab] = useState('All');
   const [statusTab, setStatusTab] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
   const [revealAchievement, setRevealAchievement] = useState(null);
 
   useEffect(() => {
@@ -158,18 +159,44 @@ export default function AchievementsPage() {
       }
       if (statusTab === 'unlocked' && !a?.unlocked) return false;
       if (statusTab === 'locked' && a?.unlocked) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const matchesTitle = (a?.title || '').toLowerCase().includes(q);
+        const matchesDesc = (a?.description || '').toLowerCase().includes(q);
+        const matchesCat = (a?.category || '').toLowerCase().includes(q);
+        const matchesDomain = (a?.domain || '').toLowerCase().includes(q);
+        if (!matchesTitle && !matchesDesc && !matchesCat && !matchesDomain) {
+          return false;
+        }
+      }
       return true;
     });
-  }, [achievements, categoryTab, statusTab]);
+  }, [achievements, categoryTab, statusTab, searchQuery]);
 
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
-  const totalXpEarned = achievements.filter((a) => a.unlocked).reduce((sum, a) => sum + a.reward.xp, 0);
+  const totalXpEarned = achievements.filter((a) => a.unlocked).reduce((sum, a) => sum + (a.reward?.xp || a.xp || 0), 0);
 
   const handleSimulateUnlock = async (id) => {
-    const updated = await achievementService.simulateUnlock(id);
-    setAchievements((prev) => prev.map((a) => (a.id === id ? updated : a)));
-    setRevealAchievement(updated);
-    pushToast(`Achievement unlocked: ${updated.title}`, 'emoji_events');
+    try {
+      const updated = await achievementService.simulateUnlock(id);
+      setAchievements((prev) => prev.map((a) => (a.id === id ? updated : a)));
+      setRevealAchievement(updated);
+
+      const xp = Number(updated?.reward?.xp ?? updated?.xp ?? 0);
+      const gold = Number(updated?.reward?.gold ?? updated?.gold ?? 0);
+
+      if (xp > 0 || gold > 0) {
+        grantRewards({
+          xp,
+          gold,
+          questTitle: `Medal Unlocked: ${updated.title}`,
+        });
+      }
+
+      pushToast(`Medal unlocked: ${updated.title} (+${xp} XP, +${gold} Gold)`, 'emoji_events');
+    } catch (err) {
+      console.error('Failed to unlock achievement:', err);
+    }
   };
 
   const handleSimulateAnyUnlock = () => {
@@ -221,47 +248,61 @@ export default function AchievementsPage() {
           </div>
           <button
             onClick={handleSimulateAnyUnlock}
-            className="px-4 py-2.5 rounded-full bg-tertiary-container text-on-tertiary font-label-md text-label-md shadow-sm hover:translate-y-0.5 transition-all flex items-center gap-1.5 whitespace-nowrap"
+            className="px-4 py-2.5 rounded-full bg-tertiary-container text-on-tertiary font-label-md text-label-md shadow-sm hover:translate-y-0.5 transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
             title="Dev tool: unlock a random locked medal to preview the reveal animation"
           >
             <span className="material-symbols-outlined text-base">auto_awesome</span>
-            Simulate Unlock
+            Unlock Random
           </button>
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 mb-6 border-b border-surface-container">
-        <div className="flex bg-surface-container rounded-full p-1 gap-1 w-fit overflow-x-auto">
-          {CATEGORY_TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setCategoryTab(t.key)}
-              className={[
-                'px-4 py-2 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors',
-                categoryTab === t.key
-                  ? 'bg-surface-container-lowest text-on-surface shadow-sm font-bold'
-                  : 'text-on-surface-variant hover:text-on-surface',
-              ].join(' ')}
-            >
-              {t.label}
-            </button>
-          ))}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-4 mb-6 border-b border-surface-container">
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="flex bg-surface-container rounded-full p-1 gap-1 w-fit overflow-x-auto">
+            {CATEGORY_TABS.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setCategoryTab(t.key)}
+                className={[
+                  'px-4 py-2 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors',
+                  categoryTab === t.key
+                    ? 'bg-surface-container-lowest text-on-surface shadow-sm font-bold'
+                    : 'text-on-surface-variant hover:text-on-surface',
+                ].join(' ')}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex bg-surface-container rounded-full p-1 gap-1 w-fit overflow-x-auto">
+            {STATUS_TABS.map((t) => (
+              <button
+                key={t.key}
+                onClick={() => setStatusTab(t.key)}
+                className={[
+                  'px-4 py-2 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors',
+                  statusTab === t.key
+                    ? 'bg-surface-container-lowest text-on-surface shadow-sm font-bold'
+                    : 'text-on-surface-variant hover:text-on-surface',
+                ].join(' ')}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
         </div>
-        <div className="flex bg-surface-container rounded-full p-1 gap-1 w-fit overflow-x-auto">
-          {STATUS_TABS.map((t) => (
-            <button
-              key={t.key}
-              onClick={() => setStatusTab(t.key)}
-              className={[
-                'px-4 py-2 rounded-full font-label-md text-label-md whitespace-nowrap transition-colors',
-                statusTab === t.key
-                  ? 'bg-surface-container-lowest text-on-surface shadow-sm font-bold'
-                  : 'text-on-surface-variant hover:text-on-surface',
-              ].join(' ')}
-            >
-              {t.label}
-            </button>
-          ))}
+        <div className="relative flex items-center">
+          <span className="material-symbols-outlined absolute left-3.5 text-outline text-[18px] pointer-events-none">
+            search
+          </span>
+          <input
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9 pr-4 py-2 bg-surface-container-lowest rounded-full font-body-sm text-body-sm text-on-surface shadow-xs focus:outline-none focus:ring-2 focus:ring-primary-container transition-all w-full sm:w-56"
+            placeholder="Search medal..."
+            type="text"
+          />
         </div>
       </div>
 

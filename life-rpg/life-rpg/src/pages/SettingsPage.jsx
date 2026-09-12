@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useGame } from '../state/GameContext';
 import * as authService from '../services/authService';
 import { setForcedFailure, getForcedFailure } from '../services/apiClient';
+import AvatarModal from '../components/AvatarModal';
 
 function Toggle({ id, checked, onChange, label, description }) {
   return (
@@ -40,6 +41,7 @@ export default function SettingsPage() {
   const navigate = useNavigate();
 
   // Local settings state
+  const [avatarModalOpen, setAvatarModalOpen] = useState(false);
   const [profileName, setProfileName] = useState(state.playerName || 'Alex');
   const [profileTitle, setProfileTitle] = useState(state.title || 'Cyber Nomad');
   const [themeMode, setThemeMode] = useState('dark-fantasy');
@@ -110,6 +112,32 @@ export default function SettingsPage() {
               <h2 className="font-headline-sm text-headline-sm text-on-surface">Character Identity</h2>
               <p className="font-body-sm text-xs text-on-surface-variant">Update your public alias and title.</p>
             </div>
+          </div>
+
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-surface-variant/40 rounded-xl border border-outline-variant/30">
+            <div className="flex items-center gap-4">
+              <div className="relative w-16 h-16 rounded-2xl bg-primary-container flex items-center justify-center text-on-primary shadow-sm overflow-hidden ring-2 ring-primary/20">
+                {state.avatarUrl ? (
+                  <img src={state.avatarUrl} alt={state.playerName} className="w-full h-full object-cover" />
+                ) : (
+                  <span className="material-symbols-outlined text-3xl">person</span>
+                )}
+              </div>
+              <div className="flex flex-col">
+                <span className="font-label-lg text-sm font-bold text-on-surface">Avatar Portrait</span>
+                <span className="font-body-sm text-xs text-on-surface-variant">
+                  {state.avatarUrl ? 'Custom photo active across realm & topbar' : 'Default hero silhouette'}
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAvatarModalOpen(true)}
+              className="px-4 py-2 rounded-xl bg-primary text-on-primary font-label-md text-xs font-bold shadow-[0_2px_0_#4029ba] hover:translate-y-[1px] transition-transform flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+            >
+              <span className="material-symbols-outlined text-base">photo_camera</span>
+              Change Photo
+            </button>
           </div>
 
           <form onSubmit={handleSaveProfile} className="flex flex-col gap-4">
@@ -358,6 +386,8 @@ export default function SettingsPage() {
           </div>
         </section>
       </div>
+
+      <AvatarModal isOpen={avatarModalOpen} onClose={() => setAvatarModalOpen(false)} />
     </div>
   );
 }

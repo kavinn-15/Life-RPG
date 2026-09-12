@@ -341,42 +341,9 @@ export default function CharacterPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
               {attributes.map((attr) => (
-                <div key={attr.key} className="bg-surface rounded-2xl p-5 flex flex-col gap-3 border border-surface-container-high/60 shadow-sm hover:border-primary/30 transition-all">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary-container/30 text-primary flex items-center justify-center">
-                        <span className="material-symbols-outlined">{attr.icon || 'tune'}</span>
-                      </div>
-                      <div>
-                        <h3 className="font-label-lg text-label-lg text-on-surface font-bold">{attr.label || attr.displayName || attr.key}</h3>
-                        <span className="font-body-xs text-body-xs text-on-surface-variant">Core Spectrum Node</span>
-                      </div>
-                    </div>
-                    <span className="font-headline-sm text-headline-sm text-primary font-black">
-                      LVL {attr.level || 1}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-label-sm font-label-sm text-on-surface-variant pt-2 border-t border-surface-container/60">
-                    <span>Current XP: <b>{Number(attr.xp ?? attr.currentXp ?? 0).toLocaleString()}</b></span>
-                    <span>7D Pace: <b className="text-tertiary">+{attr.weeklyXp || 0} XP</b></span>
-                  </div>
-
-                  <div className="flex flex-col gap-1.5">
-                    <div className="flex items-center justify-between text-label-caps font-label-caps text-outline">
-                      <span>Threshold to LVL {(attr.level || 1) + 1}</span>
-                      <span className="font-bold text-on-surface">{attr.pct ?? 0}%</span>
-                    </div>
-                    <div className="w-full h-2.5 bg-surface-container rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-primary-container rounded-full transition-all duration-500"
-                        style={{ width: `${attr.pct ?? 0}%` }}
-                      />
-                    </div>
-                  </div>
-                </div>
+                <AttributeCard key={attr.key} attribute={attr} />
               ))}
             </div>
           </div>

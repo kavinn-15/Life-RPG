@@ -21,13 +21,14 @@ export default function QuestsPage() {
         if (Array.isArray(data)) {
           list = data;
         } else if (data && typeof data === 'object') {
+          const all = Array.isArray(data.allQuests) ? data.allQuests : [];
           const featured = data.featuredQuest ? [data.featuredQuest] : [];
           const continues = Array.isArray(data.continueQuests) ? data.continueQuests : [];
           const recs = Array.isArray(data.recommendedQuests) ? data.recommendedQuests : [];
           const dailies = Array.isArray(data.dailyQuests) ? data.dailyQuests : [];
           const actives = Array.isArray(data.activeQuestQueue) ? data.activeQuestQueue : [];
           const map = new Map();
-          [...actives, ...continues, ...featured, ...dailies, ...recs].forEach((q) => {
+          [...all, ...actives, ...continues, ...featured, ...dailies, ...recs].forEach((q) => {
             if (q && q.id && !map.has(q.id)) {
               map.set(q.id, q);
             }
@@ -63,12 +64,12 @@ export default function QuestsPage() {
   );
 
   const weeklyQuests = useMemo(
-    () => allQuests.filter((q) => q.frequency === 'Weekly'),
+    () => allQuests.filter((q) => q.frequency === 'Weekly' || q.questType === 'SIDE'),
     [allQuests]
   );
 
   const epicQuests = useMemo(
-    () => allQuests.filter((q) => q.difficulty?.toLowerCase().includes('epic') || q.difficulty?.toLowerCase().includes('heroic')),
+    () => allQuests.filter((q) => (q.difficulty || '').toLowerCase().includes('epic') || (q.difficulty || '').toLowerCase().includes('heroic') || (q.difficulty || '').toLowerCase().includes('hard')),
     [allQuests]
   );
 
@@ -80,8 +81,8 @@ export default function QuestsPage() {
   const tabs = [
     { key: 'active', label: 'Active', count: activeQuests.length },
     { key: 'daily', label: 'Daily', count: dailyQuests.length },
-    { key: 'weekly', label: 'Weekly', count: weeklyQuests.length },
-    { key: 'epic', label: 'Epic', count: epicQuests.length },
+    { key: 'weekly', label: 'Weekly & Side', count: weeklyQuests.length },
+    { key: 'epic', label: 'Epic & Hard', count: epicQuests.length },
     { key: 'completed', label: 'Completed', count: completedQuests.length },
   ];
 
@@ -109,10 +110,13 @@ export default function QuestsPage() {
       const q = searchQuery.toLowerCase().trim();
       return list.filter(
         (item) =>
-          item.title?.toLowerCase().includes(q) ||
-          item.description?.toLowerCase().includes(q) ||
-          item.domain?.toLowerCase().includes(q) ||
-          item.statKey?.toLowerCase().includes(q)
+          (item.title || '').toLowerCase().includes(q) ||
+          (item.description || '').toLowerCase().includes(q) ||
+          (item.domain || '').toLowerCase().includes(q) ||
+          (item.domainName || '').toLowerCase().includes(q) ||
+          (item.difficulty || '').toLowerCase().includes(q) ||
+          (item.statKey || '').toLowerCase().includes(q) ||
+          (item.requirements || '').toLowerCase().includes(q)
       );
     }
     return list;

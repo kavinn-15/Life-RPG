@@ -78,10 +78,6 @@ export default function App() {
             <Route path="settings" element={<SettingsPage />} />
             <Route path="support" element={<HelpPage />} />
             <Route path="help" element={<HelpPage />} />
-            <Route
-              path="community"
-              element={<PlaceholderPage title="Community Guild" icon="groups" />}
-            />
           </Route>
         </Routes>
       </Suspense>

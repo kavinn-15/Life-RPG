@@ -86,6 +86,8 @@ function invalidateCacheForMutation(path) {
     clearCache('/character');
   } else if (path.includes('/notifications')) {
     clearCache('/notifications');
+  } else if (path.includes('/guilds')) {
+    clearCache('/guilds');
   } else {
     clearCache();
   }

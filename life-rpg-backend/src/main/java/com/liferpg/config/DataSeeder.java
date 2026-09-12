@@ -216,10 +216,7 @@ public class DataSeeder implements CommandLineRunner {
         }
 
         private void seedAchievements() {
-                if (achievementRepository.count() > 0)
-                        return;
-                log.info("Seeding 18 Achievements...");
-
+                log.info("Ensuring achievements are seeded...");
                 List<Achievement> achievements = Arrays.asList(
                                 new Achievement("first-quest", "First Step into the Arena",
                                                 "Complete your first quest.", "military_tech",
@@ -275,14 +272,15 @@ public class DataSeeder implements CommandLineRunner {
                                                 "Reach Domain Level 5 across 5 different domains.", "grade",
                                                 AchievementCategory.DOMAIN, "Productivity", 5, 1200, 500));
 
-                achievementRepository.saveAll(achievements);
+                for (Achievement a : achievements) {
+                        if (!achievementRepository.existsById(a.getId())) {
+                                achievementRepository.save(a);
+                        }
+                }
         }
 
         private void seedDailyMissions() {
-                if (dailyMissionRepository.count() > 0)
-                        return;
-                log.info("Seeding 6 Daily Missions...");
-
+                log.info("Ensuring daily missions are seeded...");
                 List<DailyMission> missions = List.of(
                                 new DailyMission("complete-daily-3", "Complete 3 Quests",
                                                 "Finish any 3 quests from your daily roster.", "task_alt",
@@ -303,14 +301,15 @@ public class DataSeeder implements CommandLineRunner {
                                                 "Bank 100 Gold from quest rewards and bonus bonuses.",
                                                 "monetization_on", "todayGold", 100, 90, 50));
 
-                dailyMissionRepository.saveAll(missions);
+                for (DailyMission m : missions) {
+                        if (!dailyMissionRepository.existsById(m.getId())) {
+                                dailyMissionRepository.save(m);
+                        }
+                }
         }
 
         private void seedRewards() {
-                if (rewardRepository.count() > 0)
-                        return;
-                log.info("Seeding 22 Store Rewards...");
-
+                log.info("Ensuring store rewards are seeded...");
                 List<Reward> rewards = Arrays.asList(
                                 new Reward("theme-midnight-aurora", "Midnight Aurora Theme",
                                                 "A deep-indigo interface skin with a slow aurora shimmer.", "palette",
@@ -379,7 +378,11 @@ public class DataSeeder implements CommandLineRunner {
                                                 "A tiny pixel-art companion that follows your cursor.", "diamond",
                                                 RewardCategory.Cosmetic, 850));
 
-                rewardRepository.saveAll(rewards);
+                for (Reward r : rewards) {
+                        if (!rewardRepository.existsById(r.getId())) {
+                                rewardRepository.save(r);
+                        }
+                }
         }
 
         private void seedDemoUser() {
@@ -452,9 +455,7 @@ public class DataSeeder implements CommandLineRunner {
                 }
 
                 // Quests & Milestones
-                if (questRepository.findByUserId(user.getId()).isEmpty()) {
-                        seedQuests(user);
-                }
+                seedQuests(user);
 
                 // Achievements Unlocked for Alex
                 if (userAchievementRepository.findByUserId(user.getId()).isEmpty()) {
@@ -589,79 +590,295 @@ public class DataSeeder implements CommandLineRunner {
                 Domain read = domainRepository.findById("reading").orElse(null);
                 Domain mind = domainRepository.findById("mindfulness").orElse(null);
                 Domain fin = domainRepository.findById("finance").orElse(null);
+                Domain prod = domainRepository.findById("productivity").orElse(null);
+                Domain creat = domainRepository.findById("creativity").orElse(null);
+                Domain nutr = domainRepository.findById("nutrition").orElse(null);
+                Domain res = domainRepository.findById("resilience").orElse(null);
+                Domain soc = domainRepository.findById("social").orElse(null);
+                Domain phil = domainRepository.findById("philosophy").orElse(null);
+                Domain car = domainRepository.findById("career").orElse(null);
+                Domain sleep = domainRepository.findById("sleep").orElse(null);
+                Domain write = domainRepository.findById("writing").orElse(null);
+                Domain lang = domainRepository.findById("language").orElse(null);
 
-                // Quest 1: Featured
-                Quest q1 = createQuest("quest-kafka-pipeline", user, prog, "Kafka Event Streaming Architecture",
-                                "Architect a fault-tolerant multi-partition consumer pipeline with graceful rebalancing.",
+                // --- PROGRAMMING ---
+                seedQuestItem("quest-kafka-pipeline", user, prog, "Kafka Event Streaming Architecture",
+                                "Architect a fault-tolerant multi-partition consumer pipeline with graceful rebalancing and schema registry.",
                                 "Programming", "Hard", QuestType.MAIN, 280, 95, 45, true, true, false,
-                                QuestStatus.ACTIVE, "terminal");
-                q1.setRequirements("Requires Java 21 and Docker Kafka broker active");
-                questRepository.save(q1);
+                                QuestStatus.ACTIVE, "terminal", "Requires Java 21 & Docker Kafka broker",
+                                List.of("Design partition assignment strategy & schema registry",
+                                                "Implement dead-letter-queue with exponential backoff",
+                                                "Benchmark 10,000 msg/sec throughput with k6"),
+                                List.of(true, true, false));
 
-                milestoneRepository.saveAll(List.of(
-                                new QuestMilestone(q1, "ms-1", "Design partition assignment strategy & schema registry",
-                                                true),
-                                new QuestMilestone(q1, "ms-2", "Implement dead-letter-queue with exponential backoff",
-                                                true),
-                                new QuestMilestone(q1, "ms-3", "Benchmark 10,000 msg/sec throughput with k6", false)));
+                seedQuestItem("quest-redis-raft", user, prog, "Distributed Cache & Raft Consensus Engine",
+                                "Implement leader election, log replication, and heartbeat timeouts for high-availability cluster.",
+                                "Programming", "Heroic", QuestType.MAIN, 420, 150, 90, false, true, false,
+                                QuestStatus.ACTIVE, "memory", "Distributed Systems Specialization",
+                                List.of("Implement Raft state machine & leader election timer",
+                                                "Log replication with quorum confirmation",
+                                                "Fault-injection network partition simulation"),
+                                List.of(false, false, false));
 
-                // Quest 2: Fitness Active
-                Quest q2 = createQuest("quest-deadlift-pr", user, fit, "Heavy Compound Pull Session",
-                                "Execute 3 working sets of conventional deadlifts at 405 lbs followed by barbell rows.",
-                                "Fitness", "Hard", QuestType.MAIN, 220, 70, 60, false, true, false, QuestStatus.ACTIVE,
-                                "fitness_center");
-                questRepository.save(q2);
+                seedQuestItem("quest-graphql-realtime", user, prog, "Full-Stack GraphQL Subscriptions & WebSocket Relay",
+                                "Configure bi-directional reactive telemetry streaming with JWT authorization guards.",
+                                "Programming", "Medium", QuestType.SIDE, 160, 55, 35, false, false, false,
+                                QuestStatus.ACTIVE, "hub", "WebSockets and Spring WebFlux",
+                                List.of("Setup Apollo Client subscription links",
+                                                "Secure WebSocket handshake with bearer token filter",
+                                                "Stress test 500 concurrent active connections"),
+                                List.of(true, false, false));
 
-                milestoneRepository.saveAll(List.of(
-                                new QuestMilestone(q2, "ms-4", "15-minute dynamic hip and posterior chain warm-up",
-                                                true),
-                                new QuestMilestone(q2, "ms-5", "Hit 405 lbs x 5 reps (RPE 8.5)", false),
-                                new QuestMilestone(q2, "ms-6", "Pendlay rows 4x8 + hamstring cooldown", false)));
+                seedQuestItem("quest-leetcode-dp", user, prog, "LeetCode: Dynamic Programming & Graph Traversal",
+                                "Solve 2 Medium DP problems and 1 Hard DAG topological sort challenge with optimal space complexity.",
+                                "Programming", "Medium", QuestType.DAILY, 120, 40, 40, false, false, true,
+                                QuestStatus.ACTIVE, "code", "Optimal Big-O Analysis",
+                                List.of("Solve LeetCode #300 Longest Increasing Subsequence",
+                                                "Solve LeetCode #207 Course Schedule (Kahn's Algorithm)",
+                                                "Document time/space complexities in study notes"),
+                                List.of(false, false, false));
 
-                // Quest 3: Reading Daily
-                Quest q3 = createQuest("quest-reading-ddia", user, read, "DDIA: Consistency and Consensus",
+                seedQuestItem("quest-docker-k8s", user, prog, "Docker Containerization & Kubernetes Helm Chart",
+                                "Containerize multi-container microservice stack with health probes, resource limits, and Helm templates.",
+                                "Programming", "Hard", QuestType.SIDE, 240, 80, 60, false, true, false,
+                                QuestStatus.ACTIVE, "view_in_ar", "Docker and Minikube installed",
+                                List.of("Multi-stage Dockerfile build optimization (<80MB image)",
+                                                "Configure liveness and readiness HTTP probes",
+                                                "Deploy via Helm chart to local Kubernetes namespace"),
+                                List.of(true, true, false));
+
+                // --- FITNESS ---
+                seedQuestItem("quest-deadlift-pr", user, fit, "Heavy Compound Pull Session (Deadlift 405 lbs)",
+                                "Execute 3 working sets of conventional deadlifts at 405 lbs followed by Pendlay barbell rows.",
+                                "Fitness", "Hard", QuestType.MAIN, 220, 70, 60, false, true, false,
+                                QuestStatus.ACTIVE, "fitness_center", "Warmup thoroughly & engage posterior chain",
+                                List.of("15-minute dynamic hip and posterior chain warm-up",
+                                                "Hit 405 lbs x 5 reps (RPE 8.5)",
+                                                "Pendlay rows 4x8 + hamstring cooldown"),
+                                List.of(true, false, false));
+
+                seedQuestItem("quest-zone2-cardio", user, fit, "Zone 2 Cardiovascular 10km Aerobic Run",
+                                "Maintain steady 135-145 BPM heart rate across continuous 10km outdoor or treadmill tempo.",
+                                "Fitness", "Medium", QuestType.SIDE, 180, 60, 55, false, false, false,
+                                QuestStatus.ACTIVE, "directions_run", "HR Chest Strap or Smartwatch",
+                                List.of("1km progressive pace warmup",
+                                                "8km steady Zone 2 heart rate lock (138 BPM avg)",
+                                                "1km cooldown walk and calf mobility stretches"),
+                                List.of(false, false, false));
+
+                seedQuestItem("quest-cold-shower", user, fit, "Morning Ice Protocol & Wim Hof Breathwork",
+                                "3 rounds of 30 power breaths followed by 3-minute maximum cold immersion.",
+                                "Fitness", "Easy", QuestType.DAILY, 90, 30, 15, false, false, true,
+                                QuestStatus.COMPLETED, "ac_unit", "Post-wake morning routine",
+                                List.of("3 rounds Wim Hof oxygenation breathwork",
+                                                "3 minutes uninterrupted cold shower exposure"),
+                                List.of(true, true));
+
+                seedQuestItem("quest-core-bulletproof", user, fit, "Isometric Core & Rotator Cuff Bulletproofing",
+                                "4 rounds of hollow-body holds, ab wheel rollouts, face pulls, and pallof presses.",
+                                "Fitness", "Easy", QuestType.DAILY, 80, 25, 20, false, false, true,
+                                QuestStatus.ACTIVE, "shield", "Resistance band required",
+                                List.of("Hollow body holds 4x45s",
+                                                "Face pulls with external rotation 4x15",
+                                                "Pallof press anti-rotation holds 3x30s each side"),
+                                List.of(false, false, false));
+
+                // --- READING & INTELLECT ---
+                seedQuestItem("quest-reading-ddia", user, read, "DDIA: Consistency, Consensus, & Linearizability",
                                 "Read Chapter 9 of Designing Data-Intensive Applications. Synthesize key takeaways in second brain.",
                                 "Reading", "Medium", QuestType.DAILY, 130, 45, 30, false, false, true,
-                                QuestStatus.ACTIVE, "auto_stories");
-                questRepository.save(q3);
+                                QuestStatus.ACTIVE, "auto_stories", "Physical book or Kindle",
+                                List.of("Read pages 321 to 354 on linearizability",
+                                                "Draft Obsidian note on Byzantine fault tolerance & Raft quorum"),
+                                List.of(true, false));
 
-                milestoneRepository.saveAll(List.of(
-                                new QuestMilestone(q3, "ms-7", "Read pages 321 to 354 on linearizability", true),
-                                new QuestMilestone(q3, "ms-8", "Draft Obsidian note on Byzantine fault tolerance",
-                                                false)));
+                seedQuestItem("quest-thinking-fast-slow", user, read, "Cognitive Biases: Thinking, Fast and Slow",
+                                "Deep dive into System 1 vs System 2 heuristics, prospect theory, and framing effects.",
+                                "Reading", "Medium", QuestType.SIDE, 140, 50, 40, false, true, false,
+                                QuestStatus.ACTIVE, "psychology", "Daniel Kahneman text",
+                                List.of("Read Chapters 11-14 on anchoring & availability heuristic",
+                                                "Synthesize 3 daily decision-making checkpoints"),
+                                List.of(false, false));
 
-                // Quest 4: Cold Shower (Completed today)
-                Quest q4 = createQuest("quest-cold-shower", user, fit, "Morning Ice Protocol",
-                                "3-minute cold immersion or maximum cold shower directly after waking.",
-                                "Fitness", "Easy", QuestType.DAILY, 90, 30, 5, false, false, true,
-                                QuestStatus.COMPLETED, "ac_unit");
-                q4.setCompletedAt(LocalDateTime.now().minusHours(3));
-                questRepository.save(q4);
+                seedQuestItem("quest-obsidian-zettelkasten", user, read, "Synthesize Obsidian Zettelkasten Knowledge Graph",
+                                "Transform raw book highlights into 5 atomic evergreen notes with bidirectional wikilinks.",
+                                "Reading", "Easy", QuestType.DAILY, 85, 30, 25, false, false, true,
+                                QuestStatus.ACTIVE, "share", "Obsidian / Markdown Vault",
+                                List.of("Process 10 raw Kindle highlights",
+                                                "Create 5 atomic permanent notes with bidirectional links"),
+                                List.of(false, false));
 
-                milestoneRepository.saveAll(List.of(
-                                new QuestMilestone(q4, "ms-9", "3 minutes uninterrupted cold immersion", true)));
-
-                // Quest 5: Meditation (Completed today)
-                Quest q5 = createQuest("quest-meditation-20", user, mind, "Vipassana Mindfulness Sit",
+                // --- MINDFULNESS & RECOVERY ---
+                seedQuestItem("quest-meditation-20", user, mind, "Vipassana Mindfulness Sit (20 mins stillness)",
                                 "20 minutes of silent breath awareness without shifting posture.",
                                 "Mindfulness", "Easy", QuestType.DAILY, 80, 25, 20, false, false, true,
-                                QuestStatus.COMPLETED, "self_improvement");
-                q5.setCompletedAt(LocalDateTime.now().minusHours(5));
-                questRepository.save(q5);
+                                QuestStatus.COMPLETED, "self_improvement", "Quiet environment",
+                                List.of("20 minutes uninterrupted stillness & breath awareness"),
+                                List.of(true));
 
-                milestoneRepository.saveAll(List.of(
-                                new QuestMilestone(q5, "ms-10", "20 minutes uninterrupted stillness", true)));
+                seedQuestItem("quest-nsdr-recovery", user, mind, "Deep NSDR (Non-Sleep Deep Rest) Neural Reset",
+                                "Perform 20 minutes of guided Non-Sleep Deep Rest (Huberman protocol) for dopamine recovery.",
+                                "Mindfulness", "Easy", QuestType.DAILY, 75, 25, 20, false, false, true,
+                                QuestStatus.ACTIVE, "bedtime", "Headphones recommended",
+                                List.of("20-minute NSDR body scan and diaphragmatic breathing"),
+                                List.of(false));
 
-                // Quest 6: Finance Active
-                Quest q6 = createQuest("quest-portfolio-rebalance", user, fin, "Asset Rebalancing & Dividend Review",
+                // --- FINANCE & WEALTH ---
+                seedQuestItem("quest-portfolio-rebalance", user, fin, "Asset Rebalancing & Dividend Portfolio Review",
                                 "Review monthly asset allocations, rebalance index ETF ratios, and log savings rate.",
                                 "Finance", "Medium", QuestType.SIDE, 140, 50, 40, false, true, false,
-                                QuestStatus.ACTIVE, "trending_up");
-                questRepository.save(q6);
+                                QuestStatus.ACTIVE, "trending_up", "Portfolio dashboard",
+                                List.of("Calculate quarterly savings percentage target",
+                                                "Execute automated index fund buy orders"),
+                                List.of(true, false));
 
-                milestoneRepository.saveAll(List.of(
-                                new QuestMilestone(q6, "ms-11", "Calculate quarterly savings percentage target", true),
-                                new QuestMilestone(q6, "ms-12", "Execute automated index fund buy orders", false)));
+                seedQuestItem("quest-zero-budget", user, fin, "Zero-Base Budget & Net Worth Telemetry Audit",
+                                "Categorize all transactions for the preceding 30 days and audit subscription burn rate.",
+                                "Finance", "Easy", QuestType.SIDE, 110, 40, 30, false, false, false,
+                                QuestStatus.ACTIVE, "account_balance_wallet", "Financial ledger",
+                                List.of("Audit and cancel unused recurring subscriptions",
+                                                "Log monthly net worth progression chart in spreadsheet"),
+                                List.of(false, false));
+
+                seedQuestItem("quest-dcf-valuation", user, fin, "Analyze Tech Balance Sheet & DCF Valuation",
+                                "Construct 3-statement discounted cash flow model estimating enterprise intrinsic value.",
+                                "Finance", "Hard", QuestType.MAIN, 260, 90, 75, false, true, false,
+                                QuestStatus.ACTIVE, "query_stats", "10-K filings and Excel model",
+                                List.of("Extract 5-year free cash flow history from SEC Edgar",
+                                                "Model WACC discount rate and terminal growth sensitivity",
+                                                "Draft 1-page investment thesis"),
+                                List.of(false, false, false));
+
+                // --- PRODUCTIVITY & DEEP WORK ---
+                seedQuestItem("quest-deepwork-sprint", user, prod, "4-Hour Monotasking Deep Work Sprint",
+                                "Execute four 50-minute blocks of uninterrupted cognitive deep work with phone on airplane mode.",
+                                "Productivity", "Hard", QuestType.DAILY, 200, 75, 240, false, true, true,
+                                QuestStatus.ACTIVE, "bolt", "Zero notifications during work blocks",
+                                List.of("Block 1: High-priority core technical architecture",
+                                                "Block 2: Code implementation & unit test writing",
+                                                "Block 3: Refactoring and documentation synthesis",
+                                                "Block 4: Code review & deployment check"),
+                                List.of(true, false, false, false));
+
+                seedQuestItem("quest-weekly-eisenhower", user, prod, "Weekly Review & Eisenhower Matrix Calibration",
+                                "Triage inbox, review open commitments, plan upcoming week's top 3 strategic levers.",
+                                "Productivity", "Medium", QuestType.SIDE, 130, 45, 45, false, false, false,
+                                QuestStatus.ACTIVE, "checklist", "Weekly calendar & task manager",
+                                List.of("Process email and Slack inboxes to zero",
+                                                "Map tasks to Urgent vs Important Eisenhower matrix",
+                                                "Schedule calendar timeblocks for top 3 weekly goals"),
+                                List.of(false, false, false));
+
+                // --- CREATIVITY & DESIGN ---
+                seedQuestItem("quest-design-tokens", user, creat, "UI/UX Design System Component Tokens in Figma",
+                                "Build scalable color tokens, typography scales, glassmorphism cards, and interactive buttons.",
+                                "Creativity", "Medium", QuestType.SIDE, 170, 60, 50, false, true, false,
+                                QuestStatus.ACTIVE, "palette", "Figma design file",
+                                List.of("Define semantic color palette with dark/light variants",
+                                                "Construct button component with hover, active, disabled states",
+                                                "Export CSS design tokens and variables"),
+                                List.of(true, false, false));
+
+                seedQuestItem("quest-synth-progression", user, creat, "Compose Electronic Synth Progression in DAW",
+                                "Design custom analog synth patches and arrange 16-bar melodic cyberpunk chord progression.",
+                                "Creativity", "Medium", QuestType.SIDE, 150, 50, 60, false, false, false,
+                                QuestStatus.ACTIVE, "music_note", "Ableton Live / Logic Pro / FL Studio",
+                                List.of("Sound design bass and lead synth presets",
+                                                "Compose 16-bar melodic chord progression",
+                                                "Render audio mixdown sample"),
+                                List.of(false, false, false));
+
+                // --- NUTRITION & HEALTH ---
+                seedQuestItem("quest-intermittent-fasting", user, nutr, "16:8 Intermittent Fasting & Micronutrient Log",
+                                "Complete 16 hours of clean fasting and hit 180g dietary protein target.",
+                                "Nutrition", "Easy", QuestType.DAILY, 85, 30, 10, false, false, true,
+                                QuestStatus.ACTIVE, "restaurant", "Food logging tracker",
+                                List.of("16-hour clean water/black coffee fast window",
+                                                "Log daily micronutrients and reach protein goal"),
+                                List.of(false, false));
+
+                seedQuestItem("quest-meal-prep-macro", user, nutr, "High-Protein Macro Meal Prep Protocol (5 Days)",
+                                "Prepare 5 balanced lunches with whole foods, complex carbs, and lean protein sources.",
+                                "Nutrition", "Medium", QuestType.SIDE, 160, 55, 90, false, false, false,
+                                QuestStatus.ACTIVE, "soup_kitchen", "Groceries and meal containers",
+                                List.of("Cook 1.5kg lean protein source",
+                                                "Roast fibrous greens and complex carbs",
+                                                "Portion and vacuum-seal 5 meal prep containers"),
+                                List.of(false, false, false));
+
+                // --- RESILIENCE & STOICISM ---
+                seedQuestItem("quest-stoic-journal", user, res, "Marcus Aurelius Stoic Journaling & Retrospective",
+                                "Evening journaling prompt: Dichotomy of control, gratitude, and moral inventory.",
+                                "Resilience", "Easy", QuestType.DAILY, 75, 25, 15, false, false, true,
+                                QuestStatus.ACTIVE, "edit_note", "Physical journal",
+                                List.of("Write 3 things outside of control that were released",
+                                                "Write 3 intentional actions taken with virtue"),
+                                List.of(false, false));
+
+                // --- SOCIAL & LEADERSHIP ---
+                seedQuestItem("quest-public-speaking", user, soc, "Executive Presentation & Impromptu Speaking Drills",
+                                "Record 5-minute technical presentation with zero filler words and persuasive structure.",
+                                "Social", "Medium", QuestType.SIDE, 150, 50, 30, false, true, false,
+                                QuestStatus.ACTIVE, "record_voice_over", "Video camera or voice memo",
+                                List.of("Draft speech outline using Problem-Action-Result format",
+                                                "Record 5-minute delivery on camera",
+                                                "Review recording and analyze pacing and cadence"),
+                                List.of(false, false, false));
+
+                seedQuestItem("quest-tech-mentorship", user, soc, "Mentor Junior Developer & Conduct Mock Interview",
+                                "Provide 45 minutes of pair programming guidance and constructive code review feedback.",
+                                "Social", "Medium", QuestType.SIDE, 160, 55, 45, false, false, false,
+                                QuestStatus.ACTIVE, "school", "Video call & GitHub PR",
+                                List.of("Conduct 45-minute live pair programming session",
+                                                "Deliver 3 actionable code quality recommendations"),
+                                List.of(false, false));
+
+                // --- CAREER & ARCHITECTURE ---
+                seedQuestItem("quest-career-roadmap", user, car, "Staff Engineer Promotion Dossier & Impact Matrix",
+                                "Map technical leadership contributions, multi-team business impact, and strategic initiatives.",
+                                "Career", "Hard", QuestType.MAIN, 300, 100, 60, false, true, false,
+                                QuestStatus.ACTIVE, "workspace_premium", "Engineering rubrics",
+                                List.of("Synthesize 6-month cross-functional project impact metrics",
+                                                "Document architecture decision records (ADRs) delivered",
+                                                "Review growth trajectory with principal mentor"),
+                                List.of(false, false, false));
+
+                // --- SLEEP & RECOVERY ---
+                seedQuestItem("quest-sleep-hygiene", user, sleep, "Digital Sunset & Circadian Alignment Protocol",
+                                "No blue light screens 60 minutes before bed; maintain 68°F bedroom temperature.",
+                                "Sleep", "Easy", QuestType.DAILY, 80, 25, 10, false, false, true,
+                                QuestStatus.ACTIVE, "bedtime", "Sleep tracker",
+                                List.of("Screens off 60 minutes before sleep",
+                                                "Achieve 8+ hours restorative sleep tracked"),
+                                List.of(false, false));
+        }
+
+        private void seedQuestItem(String id, User user, Domain domain, String title, String desc,
+                        String domainName, String difficulty, QuestType type, int xp,
+                        int gold, int duration, boolean featured, boolean recommended,
+                        boolean daily, QuestStatus status, String icon, String reqs,
+                        List<String> milestones, List<Boolean> milestonesDone) {
+                if (questRepository.existsById(id)) {
+                        return;
+                }
+                Quest q = createQuest(id, user, domain, title, desc, domainName, difficulty,
+                                type, xp, gold, duration, featured, recommended, daily, status, icon);
+                if (reqs != null) {
+                        q.setRequirements(reqs);
+                }
+                if (status == QuestStatus.COMPLETED) {
+                        q.setCompletedAt(LocalDateTime.now().minusHours(2));
+                }
+                Quest saved = questRepository.save(q);
+
+                if (milestones != null && !milestones.isEmpty()) {
+                        List<QuestMilestone> msList = new ArrayList<>();
+                        for (int i = 0; i < milestones.size(); i++) {
+                                boolean done = i < milestonesDone.size() && milestonesDone.get(i);
+                                msList.add(new QuestMilestone(saved, id + "-ms-" + (i + 1), milestones.get(i), done));
+                        }
+                        milestoneRepository.saveAll(msList);
+                }
         }
 
         private Quest createQuest(String id, User user, Domain domain, String title, String desc,

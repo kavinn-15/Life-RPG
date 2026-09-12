@@ -27,18 +27,22 @@ export function GameProvider({ children }) {
     ])
       .then(([character, attributes, initialNotifs]) => {
         if (cancelled) return;
-        setState({ ...character, attributes });
+        const localAvatar = localStorage.getItem('life_rpg_custom_avatar');
+        const finalAvatar = character.avatarUrl || localAvatar || null;
+        setState({ ...character, avatarUrl: finalAvatar, attributes });
         setNotifications(initialNotifs || []);
         setLoading(false);
       })
       .catch((err) => {
         if (cancelled) return;
         console.warn('Could not load live character, using default state:', err);
+        const localAvatar = localStorage.getItem('life_rpg_custom_avatar');
         setState((prev) => prev || {
           id: 1,
           playerName: 'Alex Mercer',
           title: 'Cyber Nomad',
           avatarClass: 'cyber-nomad',
+          avatarUrl: localAvatar || null,
           dailyGoal: 3,
           preferredDifficulty: 'Medium',
           mainObjective: 'Build unshakeable daily habits and master distributed systems engineering.',
@@ -75,11 +79,42 @@ export function GameProvider({ children }) {
     }, 3200);
   }, []);
 
+  const refreshNotifications = useCallback(async () => {
+    try {
+      const data = await notificationService.getNotifications();
+      if (Array.isArray(data)) {
+        setNotifications(data);
+      }
+    } catch (err) {
+      console.warn('Could not refresh notifications from server:', err);
+    }
+  }, []);
+
   const addNotification = useCallback((data) => {
-    return notificationService.addNotification(data).then((newNotif) => {
-      setNotifications((prev) => [newNotif, ...prev]);
-      return newNotif;
-    });
+    return notificationService
+      .addNotification(data)
+      .then((newNotif) => {
+        setNotifications((prev) => [newNotif, ...(prev || [])]);
+        return newNotif;
+      })
+      .catch((err) => {
+        console.warn('Backend addNotification failed, using real-time local record:', err);
+        const fallback = {
+          id: 'notif-' + Date.now(),
+          type: data.type || 'system',
+          title: data.title || 'System Dispatch',
+          message: data.message || '',
+          icon: data.icon || 'notifications',
+          iconColor: data.iconColor || 'text-primary bg-primary-fixed',
+          read: false,
+          actionUrl: data.actionUrl || null,
+          actionLabel: data.actionLabel || null,
+          timestamp: 'Just now',
+          date: new Date().toISOString(),
+        };
+        setNotifications((prev) => [fallback, ...(prev || [])]);
+        return fallback;
+      });
   }, []);
 
   const markNotificationRead = useCallback((id) => {
@@ -242,18 +277,61 @@ export function GameProvider({ children }) {
   // Toggles an owned item's equipped state within its category slot.
   // Equipping an item auto-unequips whatever else was in that slot;
   // equipping the already-equipped item unequips it.
-  const toggleEquip = useCallback((item) => {
-    setEquippedItems((prev) => {
-      const isEquipped = prev[item.category] === item.id;
-      const next = { ...prev };
-      if (isEquipped) {
-        delete next[item.category];
-      } else {
-        next[item.category] = item.id;
+  const toggleEquip = useCallback(
+    (item) => {
+      setEquippedItems((prev) => {
+        const isEquipped = prev[item.category] === item.id;
+        const next = { ...prev };
+        if (isEquipped) {
+          delete next[item.category];
+          addNotification({
+            type: 'reward_purchased',
+            title: `Unequipped: ${item.name}`,
+            message: `${item.name} removed from your active ${item.category} slot.`,
+            icon: item.icon || 'backpack',
+            iconColor: 'text-on-surface-variant bg-surface-container',
+            actionUrl: '/inventory',
+            actionLabel: 'Backpack',
+          });
+        } else {
+          next[item.category] = item.id;
+          addNotification({
+            type: 'reward_purchased',
+            title: `Equipped: ${item.name}`,
+            message: `${item.name} is now active in your ${item.category} slot!`,
+            icon: item.icon || 'backpack',
+            iconColor: 'text-tertiary bg-tertiary-fixed',
+            actionUrl: '/inventory',
+            actionLabel: 'Backpack',
+          });
+        }
+        return next;
+      });
+    },
+    [addNotification]
+  );
+
+  const updateAvatar = useCallback(
+    async (avatarUrl) => {
+      setState((prev) => (prev ? { ...prev, avatarUrl } : prev));
+      try {
+        if (avatarUrl) {
+          localStorage.setItem('life_rpg_custom_avatar', avatarUrl);
+        } else {
+          localStorage.removeItem('life_rpg_custom_avatar');
+        }
+      } catch (e) {
+        console.warn('LocalStorage save failed:', e);
       }
-      return next;
-    });
-  }, []);
+      try {
+        await characterService.updateCharacter({ avatarUrl });
+      } catch (err) {
+        console.warn('Backend update character avatar failed (persisted locally):', err);
+      }
+      pushToast(avatarUrl ? 'Avatar updated successfully!' : 'Avatar reset to default.', 'face');
+    },
+    [pushToast]
+  );
 
   const unreadNotificationsCount = useMemo(
     () => notifications.filter((n) => !n.read).length,
@@ -276,8 +354,10 @@ export function GameProvider({ children }) {
       xpForLevel,
       equippedItems,
       toggleEquip,
+      updateAvatar,
       notifications,
       unreadNotificationsCount,
+      refreshNotifications,
       addNotification,
       markNotificationRead,
       markAllNotificationsRead,
@@ -297,8 +377,10 @@ export function GameProvider({ children }) {
       pushToast,
       equippedItems,
       toggleEquip,
+      updateAvatar,
       notifications,
       unreadNotificationsCount,
+      refreshNotifications,
       addNotification,
       markNotificationRead,
       markAllNotificationsRead,
