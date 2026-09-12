@@ -1,0 +1,277 @@
+/* Life RPG - Daily Missions Page Styles */
+
+.daily-missions-container {
+  min-height: 100vh;
+  background-color: #f6f8fc;
+  color: #0f172a;
+  font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+  padding-bottom: 48px;
+}
+
+/* Header Panoramic Banner */
+.missions-hero-banner {
+  position: relative;
+  border-radius: 24px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #e0e7ff 0%, #ede9fe 40%, #dbeafe 100%);
+  border: 1px solid #e0e7ff;
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 32px 36px;
+  margin-bottom: 24px;
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.05);
+}
+
+.missions-hero-scenery {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.missions-hero-content {
+  position: relative;
+  z-index: 10;
+  max-width: 580px;
+}
+
+.missions-hero-badge {
+  display: inline-block;
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #4338ca;
+  background: rgba(224, 231, 255, 0.9);
+  padding: 4px 12px;
+  border-radius: 9999px;
+  margin-bottom: 8px;
+}
+
+.missions-hero-title {
+  font-size: clamp(26px, 3vw, 32px);
+  font-weight: 900;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  line-height: 1.15;
+  margin: 0 0 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.missions-hero-subtitle {
+  font-size: 13.5px;
+  color: #475569;
+  line-height: 1.45;
+  margin: 0;
+}
+
+/* Right HUD Stats Box */
+.missions-hud-card {
+  position: relative;
+  z-index: 10;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 20px;
+  padding: 16px 24px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 28px;
+}
+
+.missions-hud-stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.missions-hud-icon-box {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.missions-hud-stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.missions-hud-stat-val {
+  font-size: 18px;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+}
+
+.missions-hud-stat-lbl {
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #64748b;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.missions-hud-divider {
+  width: 1px;
+  height: 36px;
+  background: #e2e8f0;
+}
+
+/* Mission Cards List */
+.missions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.mission-row-card {
+  background: #ffffff;
+  border: 1px solid #eef2f6;
+  border-radius: 20px;
+  padding: 20px 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.mission-row-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+  border-color: #e0e7ff;
+}
+
+.mission-row-card.completed {
+  background: #fdfdfd;
+  border-color: #e2e8f0;
+}
+
+.mission-row-left {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  flex: 1;
+  min-width: 0;
+}
+
+.mission-icon-box {
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+}
+
+.mission-row-card.completed .mission-icon-box {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+
+.mission-details-col {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 0;
+}
+
+.mission-row-title {
+  font-size: 15.5px;
+  font-weight: 800;
+  color: #0f172a;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.mission-row-desc {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 0 0 6px;
+  line-height: 1.4;
+}
+
+.mission-row-track {
+  width: 100%;
+  max-width: 580px;
+  height: 6px;
+  background: #f1f5f9;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.mission-row-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 9999px;
+  transition: width 0.4s ease;
+}
+
+.mission-row-card.completed .mission-row-fill {
+  background: linear-gradient(90deg, #10b981 0%, #34d399 100%);
+}
+
+.mission-row-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.mission-badges-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mission-count-badge {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #64748b;
+}
+
+.mission-pill-xp {
+  background: #ede9fe;
+  color: #4f46e5;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+}
+
+.mission-pill-gold {
+  background: #fef3c7;
+  color: #b45309;
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 9999px;
+  letter-spacing: 0.02em;
+}
+
+.mission-timer-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+}

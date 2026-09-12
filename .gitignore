@@ -1,0 +1,6 @@
+.tools/
+*.zip
+data/
+target/
+.env.local
+.DS_Store

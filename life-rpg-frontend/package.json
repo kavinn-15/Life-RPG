@@ -1,0 +1,10 @@
+{
+  "name": "life-rpg-root",
+  "private": true,
+  "version": "1.0.0",
+  "scripts": {
+    "dev": "npm --prefix life-rpg run dev",
+    "build": "npm --prefix life-rpg run build",
+    "preview": "npm --prefix life-rpg run preview"
+  }
+}
