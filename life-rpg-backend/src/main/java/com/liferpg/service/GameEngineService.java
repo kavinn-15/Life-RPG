@@ -91,8 +91,9 @@ public class GameEngineService {
         // Process Attribute XP
         String attrKey = quest.getAttributeKey();
         int attrXpReward = quest.getAttributeXpReward() > 0 ? quest.getAttributeXpReward() : quest.getStatAmount() * 10;
+        boolean attrLevelUp = false;
         if (attrKey != null && !attrKey.isBlank()) {
-            attributeService.processAttributeXpGain(user, attrKey, attrXpReward);
+            attrLevelUp = attributeService.processAttributeXpGain(user, attrKey, attrXpReward);
         }
 
         // Process Domain Progression

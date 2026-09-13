@@ -5,6 +5,7 @@ import com.liferpg.dto.quest.QuestCompletionResponseDTO;
 import com.liferpg.entity.Character;
 import com.liferpg.entity.Quest;
 import com.liferpg.entity.User;
+import com.liferpg.enums.QuestDifficulty;
 import com.liferpg.enums.QuestStatus;
 import com.liferpg.enums.QuestType;
 import com.liferpg.enums.UserRole;
@@ -54,7 +55,7 @@ class GameEngineServiceTest {
                 characterService
         );
 
-        user = new User("testplayer@liferpg.app", "pass", "Test Player", UserRole.USER);
+        user = new User("alex@liferpg.app", "pass", "Alex", UserRole.USER);
         user.setId(1L);
 
         character = new Character(user);

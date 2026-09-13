@@ -50,7 +50,7 @@ function EmptyState({ statusTab, categoryTab }) {
   );
 }
 
-function AchievementCard({ achievement }) {
+function AchievementCard({ achievement, onSimulateUnlock }) {
   const meta = getCategoryMeta(achievement?.category);
   const current = Number(achievement?.progress?.current ?? achievement?.current ?? 0);
   const target = Math.max(1, Number(achievement?.progress?.target ?? achievement?.target ?? 1));
@@ -107,18 +107,28 @@ function AchievementCard({ achievement }) {
         </div>
         <ProgressBar pct={pct} className={meta.accentClass.split(' ')[0]} />
       </div>
-      <div className="flex items-center gap-2 mt-auto pt-1">
-        <Chip className="text-primary bg-primary-fixed">+{xpReward} XP</Chip>
-        {goldReward > 0 && (
-          <Chip className="text-secondary bg-secondary-fixed">+{goldReward} Gold</Chip>
-        )}
+      <div className="flex items-center justify-between gap-2 mt-auto pt-1">
+        <div className="flex items-center gap-2">
+          <Chip className="text-primary bg-primary-fixed">+{xpReward} XP</Chip>
+          {goldReward > 0 && (
+            <Chip className="text-secondary bg-secondary-fixed">+{goldReward} Gold</Chip>
+          )}
+        </div>
+        <button
+          onClick={() => onSimulateUnlock(achievement?.id)}
+          className="px-3 py-1.5 rounded-full bg-[#5b4be2] text-white hover:bg-[#4d3dd4] text-[11px] font-extrabold shadow-sm transition-all flex items-center gap-1 shrink-0 active:scale-95"
+          title="Click to complete and unlock this achievement medal"
+        >
+          <span className="material-symbols-outlined text-sm">auto_awesome</span>
+          <span>Complete &amp; Unlock</span>
+        </button>
       </div>
     </div>
   );
 }
 
 export default function AchievementsPage() {
-  const { state } = useGame();
+  const { state, pushToast, grantRewards } = useGame();
   const [loading, setLoading] = useState(true);
   const [achievements, setAchievements] = useState([]);
   const [categoryTab, setCategoryTab] = useState('All');
@@ -163,6 +173,31 @@ export default function AchievementsPage() {
     .filter((a) => a?.unlocked)
     .reduce((sum, a) => sum + Number(a?.reward?.xp ?? a?.xp ?? 0), 0);
 
+  const handleSimulateUnlock = async (id) => {
+    try {
+      const updated = await achievementService.simulateUnlock(id);
+      setAchievements((prev) => prev.map((a) => (a.id === id ? updated : a)));
+      setRevealAchievement(updated);
+      const xpVal = Number(updated.reward?.xp ?? updated.xp ?? 100);
+      const goldVal = Number(updated.reward?.gold ?? updated.gold ?? 50);
+      grantRewards?.({ xp: xpVal, gold: goldVal });
+      pushToast(`Achievement unlocked: ${updated.title} (+${xpVal} XP, +${goldVal} Gold)`, 'emoji_events');
+    } catch (err) {
+      console.error('Error unlocking achievement:', err);
+    }
+  };
+
+  const handleSimulateAnyUnlock = () => {
+    const candidates = filtered.filter((a) => !a.unlocked);
+    const pool = candidates.length > 0 ? candidates : achievements.filter((a) => !a.unlocked);
+    if (pool.length === 0) {
+      pushToast('Every medal is already claimed!', 'workspace_premium');
+      return;
+    }
+    const pick = pool[Math.floor(Math.random() * pool.length)];
+    handleSimulateUnlock(pick.id);
+  };
+
   return (
     <>
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-8">
@@ -199,6 +234,14 @@ export default function AchievementsPage() {
               <span className="font-label-caps text-label-caps text-outline uppercase">XP From Medals</span>
             </div>
           </div>
+          <button
+            onClick={handleSimulateAnyUnlock}
+            className="px-4 py-2.5 rounded-full bg-tertiary-container text-on-tertiary font-label-md text-label-md shadow-sm hover:translate-y-0.5 transition-all flex items-center gap-1.5 whitespace-nowrap"
+            title="Dev tool: unlock a random locked medal to preview the reveal animation"
+          >
+            <span className="material-symbols-outlined text-base">auto_awesome</span>
+            Simulate Unlock
+          </button>
         </div>
       </div>
 
@@ -244,7 +287,7 @@ export default function AchievementsPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-gutter">
           {filtered.map((a) => (
-            <AchievementCard key={a.id} achievement={a} />
+            <AchievementCard key={a.id} achievement={a} onSimulateUnlock={handleSimulateUnlock} />
           ))}
         </div>
       )}

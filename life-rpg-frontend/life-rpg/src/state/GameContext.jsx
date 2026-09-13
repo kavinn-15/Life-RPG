@@ -1,25 +1,25 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import * as characterService from '../services/characterService';
 import * as notificationService from '../services/notificationService';
-import { xpForLevel, initialAttributes, initialCharacter } from '../data/characterData';
+import { xpForLevel } from '../services/characterService';
 
 const DEFAULT_GAME_STATE = {
   id: null,
-  playerName: initialCharacter?.playerName || 'Adventurer',
-  title: initialCharacter?.title || 'Novice Seeker',
+  playerName: 'Adventurer',
+  title: 'Novice Seeker',
   avatarClass: 'cyber-nomad',
   dailyGoal: 3,
   preferredDifficulty: 'Medium',
   mainObjective: 'Level up reality and conquer daily goals.',
-  level: initialCharacter?.level || 1,
-  xp: initialCharacter?.xp || 0,
+  level: 1,
+  xp: 0,
   totalXp: 0,
-  gold: initialCharacter?.gold || 100,
-  streak: initialCharacter?.streak || 0,
+  gold: 100,
+  streak: 0,
   longestStreak: 0,
-  questsCompletedToday: initialCharacter?.questsCompletedToday || 0,
-  questsTotalToday: initialCharacter?.questsTotalToday || 3,
-  attributes: initialAttributes || [],
+  questsCompletedToday: 0,
+  questsTotalToday: 3,
+  attributes: [],
 };
 
 const GameContext = createContext(null);
@@ -51,11 +51,10 @@ export function GameProvider({ children }) {
           localAvatar = JSON.parse(localStorage.getItem('liferpg_avatar') || 'null');
         } catch {}
         setState({
-          ...DEFAULT_GAME_STATE,
           ...character,
           avatarUrl: localAvatar?.avatarUrl ?? character?.avatarUrl ?? null,
           avatarClass: localAvatar?.avatarClass ?? character?.avatarClass ?? 'rose',
-          attributes: (attributes && Array.isArray(attributes) && attributes.length > 0) ? attributes : initialAttributes,
+          attributes,
         });
         setNotifications(initialNotifs || []);
         setLoading(false);
@@ -71,7 +70,6 @@ export function GameProvider({ children }) {
           ...(prev || DEFAULT_GAME_STATE),
           avatarUrl: localAvatar?.avatarUrl ?? null,
           avatarClass: localAvatar?.avatarClass ?? 'rose',
-          attributes: (prev?.attributes && prev.attributes.length > 0) ? prev.attributes : initialAttributes,
         }));
         setLoading(false);
       });
@@ -80,7 +78,6 @@ export function GameProvider({ children }) {
       cancelled = true;
     };
   }, []);
-
 
   useEffect(() => {
     return loadCharacterData();

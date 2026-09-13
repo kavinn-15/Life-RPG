@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGame } from '../state/GameContext';
-import * as questService from '../services/questService';
 
 const DOMAINS = [
-  { key: 'finance', label: 'Finance', icon: 'account_balance', color: 'amber', iconBg: '#fef3c7', iconColor: '#d97706' },
-  { key: 'code', label: 'Programming', icon: 'code', color: 'blue', iconBg: '#ede9fe', iconColor: '#6366f1' },
-  { key: 'sports', label: 'Sports', icon: 'sports_soccer', color: 'green', iconBg: '#dcfce7', iconColor: '#15803d' },
-  { key: 'reading', label: 'Reading', icon: 'menu_book', color: 'blue', iconBg: '#dbeafe', iconColor: '#2563eb' },
-  { key: 'mind', label: 'Mind', icon: 'self_improvement', color: 'pink', iconBg: '#fce7f3', iconColor: '#db2777' },
-  { key: 'fitness', label: 'Fitness', icon: 'fitness_center', color: 'green', iconBg: '#dcfce7', iconColor: '#15803d' },
+  { key: 'finance', label: 'Finance', icon: 'account_balance' },
+  { key: 'code', label: 'Code', icon: 'code' },
+  { key: 'sports', label: 'Sports', icon: 'sports_soccer' },
+  { key: 'reading', label: 'Reading', icon: 'menu_book' },
+  { key: 'mind', label: 'Mind', icon: 'self_improvement' },
+  { key: 'fitness', label: 'Fitness', icon: 'fitness_center' },
 ];
 
 const DIFFICULTIES = ['Easy', 'Medium', 'Hard', 'Epic'];
@@ -31,42 +30,11 @@ export default function QuestForgePanel() {
   const mult = DIFFICULTY_MULT[difficulty] * TIME_MULT[time];
   const xp = Math.round(baseXp * mult);
   const gold = Math.round(baseGold * mult);
-  const activeDomain = DOMAINS.find((d) => d.key === domain) || DOMAINS[0];
+  const activeDomain = DOMAINS.find((d) => d.key === domain);
 
-  const handleForge = async () => {
+  const handleForge = () => {
     setMinted(true);
-
-    const diffColor =
-      difficulty === 'Hard' || difficulty === 'Epic' ? 'red' : difficulty === 'Medium' ? 'amber' : 'green';
-
-    await questService.createQuest({
-      title: title.trim() || 'Untitled Forged Quest',
-      description: `Custom forged ${difficulty} quest in ${activeDomain.label} domain (${time}).`,
-      domain: activeDomain.label.toUpperCase(),
-      domainId: domain,
-      domainColor: activeDomain.color,
-      difficulty: difficulty.toUpperCase(),
-      diffColor,
-      time,
-      duration: time,
-      rewardXp: xp,
-      xp,
-      rewardGold: gold,
-      gold,
-      icon: activeDomain.icon,
-      iconBg: activeDomain.iconBg,
-      iconColor: activeDomain.iconColor,
-      subtasks: [
-        { id: 1, text: title.trim() || 'Complete forged quest task', done: false },
-        { id: 2, text: 'Review performance & log mastery', done: false },
-      ],
-      progressPct: 0,
-      progress: 0,
-      progressLabel: '0% (0/2)',
-      status: 'ACTIVE',
-    });
-
-    grantRewards?.({ xp: Math.round(xp * 0.1), gold: Math.round(gold * 0.1), questTitle: 'Contract Sign-on Bonus' });
+    grantRewards({ xp, gold });
     pushToast(`Quest forged: ${title || 'Untitled Quest'} · +${xp} XP`, 'auto_awesome');
     setTimeout(() => setMinted(false), 1500);
   };

@@ -34,7 +34,7 @@ public class LeaderboardService {
         entries.add(new LeaderboardEntryDTO(rank++, "TK", "Tariq Khan", "LVL 12 • Ranger", 11400, "text-on-surface-variant", "text-on-surface"));
 
         for (Character c : topCharacters.getContent()) {
-            if (c.getPlayerName() == null || c.getPlayerName().isBlank()) {
+            if ("Alex".equals(c.getPlayerName()) || c.getUser().getEmail().contains("alex")) {
                 continue;
             }
             String initials = getInitials(c.getPlayerName());

@@ -2,11 +2,95 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useGame } from '../state/GameContext';
 import * as questService from '../services/questService';
-import * as domainService from '../services/domainService';
 
 // Asset imports
 import adventureHeroArt from '../assets/adventure-hero-art.png';
 import adventureLocationMap from '../assets/adventure-location-map.png';
+
+/* ================================================================
+   ADVENTURE PATHS DATA
+   ================================================================ */
+
+const ADVENTURE_PATHS = [
+  {
+    id: 'habits',
+    title: 'Forest of Habits',
+    description: 'Build better habits and unlock your potential.',
+    quests: 12,
+    progress: 20,
+    icon: 'eco',
+    iconBg: 'bg-[#e8f7ee]',
+    iconColor: 'text-[#22845c]',
+    barColor: 'bg-[#2ec57d]',
+  },
+  {
+    id: 'productivity',
+    title: 'Peak of Productivity',
+    description: 'Master focus, time management, and get things done.',
+    quests: 8,
+    progress: 35,
+    icon: 'landscape',
+    iconBg: 'bg-[#fff1e1]',
+    iconColor: 'text-[#d96a1a]',
+    barColor: 'bg-[#ff8f1f]',
+  },
+  {
+    id: 'knowledge',
+    title: 'Citadel of Knowledge',
+    description: 'Learn new skills and expand your mind.',
+    quests: 15,
+    progress: 40,
+    icon: 'account_balance',
+    iconBg: 'bg-[#eef0ff]',
+    iconColor: 'text-[#505be8]',
+    barColor: 'bg-[#6e63ea]',
+  },
+  {
+    id: 'wellbeing',
+    title: 'Isle of Wellbeing',
+    description: 'Improve your health, mindset, and balance.',
+    quests: 10,
+    progress: 25,
+    icon: 'favorite',
+    iconBg: 'bg-[#ffe9ed]',
+    iconColor: 'text-[#ea436b]',
+    barColor: 'bg-[#f45376]',
+  },
+];
+
+/* ================================================================
+   FEATURED ADVENTURES DATA
+   ================================================================ */
+
+const FEATURED_ADVENTURES = [
+  {
+    id: 'challenge',
+    title: '30-Day Challenge',
+    subtitle: 'A month. A better you.',
+    reward: '+500 XP',
+    icon: 'emoji_events',
+    iconBg: 'bg-[#fff6e2]',
+    iconColor: 'text-[#efa813]',
+  },
+  {
+    id: 'mastery',
+    title: 'Mastery Quest',
+    subtitle: 'Push past your boundaries.',
+    reward: '+450 XP',
+    icon: 'psychology',
+    iconBg: 'bg-[#f0efff]',
+    iconColor: 'text-[#6356df]',
+  },
+  {
+    id: 'legendary',
+    title: 'Legendary Quest',
+    subtitle: 'For those who go further.',
+    reward: '+1,000 XP',
+    icon: 'workspace_premium',
+    iconBg: 'bg-[#fff6e2]',
+    iconColor: 'text-[#efa813]',
+  },
+];
 
 /* ================================================================
    LOADING STATE
@@ -200,7 +284,7 @@ function FeaturedAdventureCard({ adventure, onSelect }) {
    LOCATION PANEL (RIGHT COLUMN CARD 1)
    ================================================================ */
 
-function CurrentLocationPanel({ currentLocation = 'Forest of Habits', nextStop = 'Citadel of Codecraft', playerClass = 'Adventurer', onViewMap }) {
+function CurrentLocationPanel({ onViewMap }) {
   return (
     <section className="overflow-hidden rounded-2xl bg-[#101032] border border-[#1e1e4a] text-white shadow-[0_4px_18px_rgba(16,16,50,0.14)]">
       {/* Header */}
@@ -247,10 +331,10 @@ function CurrentLocationPanel({ currentLocation = 'Forest of Habits', nextStop =
 
           <div className="rounded-xl bg-[#0e1030]/90 px-3 py-1.5 shadow-[0_4px_14px_rgba(0,0,0,0.4)] backdrop-blur-sm border border-white/10">
             <p className="text-[9px] font-bold uppercase tracking-wider text-[#a0a2c2]">
-              You are here · {playerClass}
+              You are here
             </p>
             <p className="text-[12px] font-extrabold text-white">
-              {currentLocation}
+              Forest of Habits
             </p>
           </div>
         </div>
@@ -287,7 +371,7 @@ function CurrentLocationPanel({ currentLocation = 'Forest of Habits', nextStop =
               Next Stop
             </p>
             <p className="text-[11px] font-extrabold text-white">
-              {nextStop}
+              Citadel of Knowledge
             </p>
           </div>
         </div>
@@ -300,9 +384,9 @@ function CurrentLocationPanel({ currentLocation = 'Forest of Habits', nextStop =
    ADVENTURE PROGRESS (RIGHT COLUMN CARD 2)
    ================================================================ */
 
-function AdventureProgressPanel({ progress = 0, cycle = 'Cycle 1', milestones = '0 / 0', onDetail }) {
+function AdventureProgressPanel({ progress = 28, cycle = 'Cycle 4', milestones = '3 / 12', onDetail }) {
   const circumference = 2 * Math.PI * 34;
-  const offset = circumference * (1 - Math.min(1, Math.max(0, progress / 100)));
+  const offset = circumference * (1 - progress / 100);
 
   return (
     <section className="rounded-2xl bg-[#101032] border border-[#1e1e4a] p-4 text-white shadow-[0_4px_18px_rgba(16,16,50,0.14)]">
@@ -391,15 +475,12 @@ function AdventureProgressPanel({ progress = 0, cycle = 'Cycle 1', milestones = 
    ================================================================ */
 
 function ActiveAdventureQuest({ quest, onContinue, onViewDetails }) {
-  const title = quest?.title || 'Explore New Frontiers';
+  const title = quest?.title || 'The Habit Trail';
   const description =
     quest?.description ||
-    'Take on a forged or recommended quest to start your journey.';
-  const progressPct = quest?.progressPct ?? quest?.progress ?? 0;
+    'Complete 7 days of your morning routine to unlock the next path.';
+  const progressPct = quest?.progress ?? 43;
   const difficulty = quest?.difficulty || 'MEDIUM';
-  const subtasks = Array.isArray(quest?.subtasks) ? quest.subtasks : [];
-  const doneCount = subtasks.filter((st) => st.done).length;
-  const stepLabel = subtasks.length > 0 ? `${doneCount} / ${subtasks.length} steps` : `${progressPct}%`;
 
   return (
     <section>
@@ -447,7 +528,7 @@ function ActiveAdventureQuest({ quest, onContinue, onViewDetails }) {
             />
           </div>
           <span className="whitespace-nowrap text-[10px] font-bold text-[#555675]">
-            {stepLabel}
+            3 / 7 days
           </span>
         </div>
 
@@ -501,187 +582,44 @@ export default function AdventurePage() {
   const navigate = useNavigate();
 
   const [loading, setLoading] = useState(true);
-  const [domains, setDomains] = useState([]);
-  const [questList, setQuestList] = useState(() => questService.getStoredQuests());
+  const [quests, setQuests] = useState({
+    featuredQuest: null,
+    continueQuests: [],
+    recommendedQuests: [],
+  });
 
-  const loadData = () => {
-    Promise.all([domainService.getDomains(), questService.getQuests()])
-      .then(([domainData, questsData]) => {
-        if (Array.isArray(domainData) && domainData.length > 0) {
-          setDomains(domainData);
-        }
-        if (Array.isArray(questsData) && questsData.length > 0) {
-          setQuestList(questsData);
-        } else {
-          setQuestList(questService.getStoredQuests());
-        }
+  useEffect(() => {
+    let cancelled = false;
+
+    questService
+      .getQuests()
+      .then((data) => {
+        if (cancelled) return;
+        setQuests({
+          featuredQuest: data?.featuredQuest || null,
+          continueQuests: data?.continueQuests || [],
+          recommendedQuests: data?.recommendedQuests || [],
+        });
         setLoading(false);
       })
       .catch((error) => {
-        console.warn('Could not load adventure data:', error);
-        setQuestList(questService.getStoredQuests());
+        if (cancelled) return;
+        console.warn('Could not load quests:', error);
         setLoading(false);
       });
-  };
-
-  useEffect(() => {
-    loadData();
-
-    const handleQuestsUpdated = () => {
-      setQuestList(questService.getStoredQuests());
-    };
-
-    window.addEventListener('liferpg_quests_updated', handleQuestsUpdated);
-    window.addEventListener('storage', handleQuestsUpdated);
 
     return () => {
-      window.removeEventListener('liferpg_quests_updated', handleQuestsUpdated);
-      window.removeEventListener('storage', handleQuestsUpdated);
+      cancelled = true;
     };
   }, []);
 
-  // 1. Compute dynamic Adventure Paths from real Domains & Quest Progress
-  const adventurePaths = useMemo(() => {
-    if (!domains || domains.length === 0) return [];
-
-    const palette = [
-      { iconBg: 'bg-[#e8f7ee]', iconColor: 'text-[#22845c]', barColor: 'bg-[#2ec57d]' },
-      { iconBg: 'bg-[#fff1e1]', iconColor: 'text-[#d96a1a]', barColor: 'bg-[#ff8f1f]' },
-      { iconBg: 'bg-[#eef0ff]', iconColor: 'text-[#505be8]', barColor: 'bg-[#6e63ea]' },
-      { iconBg: 'bg-[#ffe9ed]', iconColor: 'text-[#ea436b]', barColor: 'bg-[#f45376]' },
-      { iconBg: 'bg-[#f0efff]', iconColor: 'text-[#6356df]', barColor: 'bg-[#6e63ea]' },
-      { iconBg: 'bg-[#fef3c7]', iconColor: 'text-[#d97706]', barColor: 'bg-[#f59e0b]' },
-    ];
-
-    return domains.slice(0, 4).map((d, index) => {
-      const dName = (d.name || '').toUpperCase();
-      const dId = (d.id || '').toUpperCase();
-
-      const matchingQuests = questList.filter((q) => {
-        const qDom = String(q.domain || '').toUpperCase();
-        const qDomId = String(q.domainId || '').toUpperCase();
-        return (
-          qDom === dName ||
-          qDomId === dId ||
-          (dName === 'PROGRAMMING' && qDom === 'CODE') ||
-          (dName === 'FITNESS' && (qDom === 'SPORTS' || qDom === 'HEALTH')) ||
-          (dName === 'MIND' && qDom === 'MEDITATION')
-        );
-      });
-
-      const totalCount = Math.max(matchingQuests.length, d.quests?.length || 4);
-      const completedCount = matchingQuests.filter(
-        (q) => (q.progressPct ?? q.progress ?? 0) === 100
-      ).length;
-      const progress = totalCount > 0 ? Math.round((completedCount / totalCount) * 100) : 0;
-      const pal = palette[index % palette.length];
-
-      return {
-        id: d.id,
-        title: d.name,
-        description: d.tagline || d.description || `Master your skills in the ${d.name} realm.`,
-        quests: totalCount,
-        progress,
-        icon: d.icon || 'explore',
-        iconBg: pal.iconBg,
-        iconColor: pal.iconColor,
-        barColor: pal.barColor,
-      };
-    });
-  }, [domains, questList]);
-
-  // 2. Compute dynamic Featured Adventures from quests with high XP / Hard challenges
-  const featuredAdventures = useMemo(() => {
-    if (!questList || questList.length === 0) return [];
-
-    const sortedByXp = [...questList].sort(
-      (a, b) => (b.rewardXp ?? b.xp ?? 0) - (a.rewardXp ?? a.xp ?? 0)
-    );
-    const topXpQuest = sortedByXp[0];
-
-    const challengeQuest =
-      questList.find((q) => {
-        const diff = String(q.difficulty || '').toUpperCase();
-        return (diff === 'HARD' || diff === 'EPIC') && q.id !== topXpQuest?.id;
-      }) || sortedByXp[1] || topXpQuest;
-
-    const nextActiveQuest =
-      questList.find(
-        (q) =>
-          (q.progressPct ?? q.progress ?? 0) < 100 &&
-          q.id !== topXpQuest?.id &&
-          q.id !== challengeQuest?.id
-      ) || sortedByXp[2] || questList[0];
-
-    return [
-      {
-        id: topXpQuest?.id || 'feat-1',
-        title: topXpQuest?.title || 'High Yield Mastery',
-        subtitle: `${topXpQuest?.domain || 'GENERAL'} · ${topXpQuest?.difficulty || 'MEDIUM'}`,
-        reward: `+${topXpQuest?.rewardXp ?? topXpQuest?.xp ?? 250} XP`,
-        icon: 'emoji_events',
-        iconBg: 'bg-[#fff6e2]',
-        iconColor: 'text-[#efa813]',
-        questId: topXpQuest?.id,
-      },
-      {
-        id: challengeQuest?.id || 'feat-2',
-        title: challengeQuest?.title || 'Heroic Challenge',
-        subtitle: `${challengeQuest?.domain || 'ADVENTURE'} · ${challengeQuest?.difficulty || 'HARD'}`,
-        reward: `+${challengeQuest?.rewardXp ?? challengeQuest?.xp ?? 220} XP`,
-        icon: 'psychology',
-        iconBg: 'bg-[#f0efff]',
-        iconColor: 'text-[#6356df]',
-        questId: challengeQuest?.id,
-      },
-      {
-        id: nextActiveQuest?.id || 'feat-3',
-        title: nextActiveQuest?.title || 'Active Expedition',
-        subtitle: `${nextActiveQuest?.domain || 'SKILL'} · Priority Goal`,
-        reward: `+${nextActiveQuest?.rewardXp ?? nextActiveQuest?.xp ?? 150} XP`,
-        icon: 'workspace_premium',
-        iconBg: 'bg-[#e8f7ee]',
-        iconColor: 'text-[#22845c]',
-        questId: nextActiveQuest?.id,
-      },
-    ];
-  }, [questList]);
-
-  // 3. Dynamic Active Quest (top unfinished quest)
   const activeQuest = useMemo(() => {
     return (
-      questList.find((q) => (q.progressPct ?? q.progress ?? 0) < 100) ||
-      questList[0] ||
+      quests.continueQuests?.[0] ||
+      quests.featuredQuest ||
       null
     );
-  }, [questList]);
-
-  // 4. Dynamic Overall Progress Stats
-  const totalQuests = questList.length || 1;
-  const completedQuests = questList.filter((q) => (q.progressPct ?? q.progress ?? 0) === 100).length;
-  const overallProgressPct = Math.round((completedQuests / totalQuests) * 100);
-  const cycleLabel = `Cycle ${Math.floor(((state.character?.level || 1) - 1) / 5) + 1} (Lvl ${state.character?.level || 1})`;
-  const milestonesLabel = `${completedQuests} / ${totalQuests}`;
-
-  // 5. Dynamic Location HUD
-  const activeDomainName = activeQuest?.domain || 'FITNESS';
-  const locationMap = {
-    FITNESS: 'Peak of Vitality',
-    SPORTS: 'Coliseum of Athletics',
-    HEALTH: 'Sanctuary of Health',
-    PROGRAMMING: 'Citadel of Codecraft',
-    CODE: 'Citadel of Codecraft',
-    FINANCE: 'Vault of Prosperity',
-    READING: 'Grand Archives',
-    MIND: 'Monastery of Mindfulness',
-    MEDITATION: 'Monastery of Mindfulness',
-    CAREER: 'Summit of Industry',
-  };
-  const currentLocationName = locationMap[activeDomainName.toUpperCase()] || `${activeDomainName} Haven`;
-  const nextStopName =
-    activeDomainName.toUpperCase() === 'PROGRAMMING' || activeDomainName.toUpperCase() === 'CODE'
-      ? 'Vault of Prosperity'
-      : 'Citadel of Codecraft';
+  }, [quests]);
 
   if (loading) {
     return <AdventureLoading />;
@@ -732,11 +670,11 @@ export default function AdventurePage() {
             </div>
 
             <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 xl:grid-cols-4">
-              {adventurePaths.map((path) => (
+              {ADVENTURE_PATHS.map((path) => (
                 <AdventurePathCard
                   key={path.id}
                   path={path}
-                  onSelect={() => navigate(`/domains/${path.id}`)}
+                  onSelect={() => navigate('/domains')}
                 />
               ))}
             </div>
@@ -754,11 +692,11 @@ export default function AdventurePage() {
             </div>
 
             <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">
-              {featuredAdventures.map((adventure) => (
+              {FEATURED_ADVENTURES.map((adventure) => (
                 <FeaturedAdventureCard
                   key={adventure.id}
                   adventure={adventure}
-                  onSelect={() => navigate(adventure.questId ? `/quests/${adventure.questId}` : '/quests')}
+                  onSelect={() => navigate('/quests')}
                 />
               ))}
             </div>
@@ -772,25 +710,22 @@ export default function AdventurePage() {
         <aside className="flex min-w-0 flex-col gap-3.5">
           {/* 1. Location Panel */}
           <CurrentLocationPanel
-            currentLocation={currentLocationName}
-            nextStop={nextStopName}
-            playerClass={state.character?.title || state.character?.class || 'Level ' + (state.character?.level || 1) + ' Adventurer'}
             onViewMap={() => navigate('/domains')}
           />
 
           {/* 2. Progress Panel */}
           <AdventureProgressPanel
-            progress={overallProgressPct}
-            cycle={cycleLabel}
-            milestones={milestonesLabel}
-            onDetail={() => navigate('/quests')}
+            progress={28}
+            cycle="Cycle 4"
+            milestones="3 / 12"
+            onDetail={() => navigate('/progress')}
           />
 
           {/* 3. Active Adventure Quest */}
           <ActiveAdventureQuest
             quest={activeQuest}
-            onContinue={() => navigate(activeQuest ? `/quests/${activeQuest.id}` : '/quests')}
-            onViewDetails={() => navigate(activeQuest ? `/quests/${activeQuest.id}` : '/quests')}
+            onContinue={() => navigate('/quests')}
+            onViewDetails={() => navigate('/quests')}
           />
 
           {/* 4. Adventure Quote */}
@@ -799,4 +734,4 @@ export default function AdventurePage() {
       </div>
     </div>
   );
-}
+}

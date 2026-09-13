@@ -1,13 +1,7 @@
 import { useGame } from '../state/GameContext';
 
 export default function XPContinuumPanel() {
-  const { state, xpNeeded = 100, xpPct = 0, xpForLevel = (l) => 100 * l * l } = useGame();
-
-  const currentLevel = state?.level ?? 1;
-  const currentXp = state?.xp ?? 0;
-  const needed = Number(xpNeeded) || 100;
-  const pct = typeof xpPct === 'number' && !isNaN(xpPct) ? Math.min(100, Math.max(0, xpPct)) : 0;
-  const remaining = Math.max(0, needed - currentXp);
+  const { state, xpNeeded, xpPct, xpForLevel } = useGame();
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-gutter items-stretch">
@@ -18,21 +12,21 @@ export default function XPContinuumPanel() {
             Experience Continuum
           </span>
           <span className="font-label-lg text-label-lg text-on-surface-variant">
-            {currentXp.toLocaleString()} / {needed.toLocaleString()} XP
+            {state.xp.toLocaleString()} / {xpNeeded.toLocaleString()} XP
           </span>
         </div>
         <div className="w-full h-4 bg-surface-container rounded-full overflow-hidden p-0.5">
           <div
             className="h-full bg-gradient-to-r from-primary to-primary-container rounded-full transition-all duration-500"
-            style={{ width: `${pct}%` }}
+            style={{ width: `${xpPct}%` }}
           />
         </div>
         <div className="flex items-center justify-between">
           <span className="flex items-center gap-1.5 font-label-md text-label-md text-on-surface-variant">
             <span className="material-symbols-outlined text-base">arrow_upward</span>
-            {remaining.toLocaleString()} XP until Level {currentLevel + 1} Ascension
+            {(xpNeeded - state.xp).toLocaleString()} XP until Level {state.level + 1} Ascension
           </span>
-          <span className="font-label-md text-label-md text-tertiary font-bold">{pct.toFixed(1)}% Completed</span>
+          <span className="font-label-md text-label-md text-tertiary font-bold">{xpPct.toFixed(1)}% Completed</span>
         </div>
       </div>
 
@@ -46,23 +40,23 @@ export default function XPContinuumPanel() {
         </p>
         <div className="grid grid-cols-3 gap-2">
           <div className="bg-surface rounded-xl p-3 flex flex-col items-center">
-            <span className="font-label-caps text-label-caps text-outline">L{Math.max(1, currentLevel - 1)}</span>
+            <span className="font-label-caps text-label-caps text-outline">L{state.level - 1}</span>
             <span className="font-stat-counter text-base text-on-surface mt-0.5">
-              {(xpForLevel(Math.max(1, currentLevel - 1)) || 0).toLocaleString()}
+              {xpForLevel(state.level - 1).toLocaleString()}
             </span>
             <span className="font-label-caps text-label-caps text-tertiary">Achieved ✓</span>
           </div>
           <div className="bg-primary-fixed rounded-xl p-3 flex flex-col items-center ring-2 ring-primary/30">
-            <span className="font-label-caps text-label-caps text-primary font-bold">L{currentLevel} (Now)</span>
-            <span className="font-stat-counter text-base text-on-surface mt-0.5">{needed.toLocaleString()}</span>
+            <span className="font-label-caps text-label-caps text-primary font-bold">L{state.level} (Now)</span>
+            <span className="font-stat-counter text-base text-on-surface mt-0.5">{xpNeeded.toLocaleString()}</span>
             <span className="font-label-caps text-label-caps text-on-surface-variant">
-              {pct.toFixed(0)}% of {(needed / 1000).toFixed(1)}k
+              {xpPct.toFixed(0)}% of {(xpNeeded / 1000).toFixed(1)}k
             </span>
           </div>
           <div className="bg-surface rounded-xl p-3 flex flex-col items-center">
-            <span className="font-label-caps text-label-caps text-outline">L{currentLevel + 1}</span>
+            <span className="font-label-caps text-label-caps text-outline">L{state.level + 1}</span>
             <span className="font-stat-counter text-base text-on-surface mt-0.5">
-              {(xpForLevel(currentLevel + 1) || 0).toLocaleString()}
+              {xpForLevel(state.level + 1).toLocaleString()}
             </span>
             <span className="font-label-caps text-label-caps text-outline">Gate Next</span>
           </div>
@@ -71,4 +65,3 @@ export default function XPContinuumPanel() {
     </div>
   );
 }
-

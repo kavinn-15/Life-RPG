@@ -18,37 +18,37 @@ public class Character {
     private User user;
 
     @Column(name = "player_name", nullable = false)
-    private String playerName = "Adventurer";
+    private String playerName = "Alex";
 
     @Column(nullable = false)
-    private String title = "Novice Seeker";
+    private String title = "The Builder";
 
     @Column(name = "character_class")
-    private String characterClass = "Adventurer";
+    private String characterClass = "Cyber Nomad";
 
     @Column(nullable = false)
-    private int level = 1;
+    private int level = 12;
 
     @Column(name = "current_xp", nullable = false)
-    private long currentXp = 0;
+    private long currentXp = 1850;
 
     @Column(name = "total_xp", nullable = false)
-    private long totalXp = 0;
+    private long totalXp = 1850;
 
     @Column(nullable = false)
-    private long gold = 100;
+    private long gold = 2450;
 
     @Column(name = "current_streak", nullable = false)
-    private int currentStreak = 0;
+    private int currentStreak = 14;
 
     @Column(name = "longest_streak", nullable = false)
-    private int longestStreak = 0;
+    private int longestStreak = 31;
 
     @Column(name = "quests_completed_today", nullable = false)
-    private int questsCompletedToday = 0;
+    private int questsCompletedToday = 5;
 
     @Column(name = "quests_total_today", nullable = false)
-    private int questsTotalToday = 3;
+    private int questsTotalToday = 8;
 
     @Column(name = "daily_goal", nullable = false)
     private int dailyGoal = 3;
@@ -57,7 +57,7 @@ public class Character {
     private String preferredDifficulty = "Medium";
 
     @Column(name = "main_objective", length = 500)
-    private String mainObjective = "Level up reality and conquer daily goals.";
+    private String mainObjective = "Build unshakeable daily habits and master distributed systems engineering.";
 
     @Column(name = "avatar_class")
     private String avatarClass = "cyber-nomad";

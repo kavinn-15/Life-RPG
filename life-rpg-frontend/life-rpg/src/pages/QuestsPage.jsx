@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useGame } from '../state/GameContext';
 import * as questService from '../services/questService';
@@ -15,6 +15,15 @@ const SORT_OPTIONS = [
   { key: 'difficulty', label: 'Difficulty', icon: 'bolt' },
 ];
 
+const DOMAINS_SUMMARY = [
+  { name: 'Fitness', icon: 'fitness_center', color: '#10b981', current: 3, total: 8 },
+  { name: 'Programming', icon: 'code', color: '#6366f1', current: 5, total: 10 },
+  { name: 'Finance', icon: 'payments', color: '#f59e0b', current: 2, total: 6 },
+  { name: 'Reading', icon: 'auto_stories', color: '#3b82f6', current: 4, total: 8 },
+  { name: 'Mind', icon: 'psychology', color: '#ec4899', current: 1, total: 5 },
+  { name: 'Career', icon: 'work', color: '#854d0e', current: 3, total: 7 },
+];
+
 export default function QuestsPage() {
   const { grantRewards, pushToast } = useGame();
   const [activeTab, setActiveTab] = useState('active');
@@ -25,27 +34,14 @@ export default function QuestsPage() {
 
   useEffect(() => {
     let cancelled = false;
-    const refreshQuests = () => {
-      questService.getQuests().then((data) => {
-        if (cancelled) return;
-        if (Array.isArray(data) && data.length > 0) {
-          setQuests(data);
-        }
-      });
-    };
-    refreshQuests();
-
-    const handleQuestsUpdated = () => {
-      setQuests(questService.getStoredQuests());
-    };
-
-    window.addEventListener('liferpg_quests_updated', handleQuestsUpdated);
-    window.addEventListener('storage', handleQuestsUpdated);
-
+    questService.getQuests().then((data) => {
+      if (cancelled) return;
+      if (Array.isArray(data) && data.length > 0) {
+        setQuests(data);
+      }
+    });
     return () => {
       cancelled = true;
-      window.removeEventListener('liferpg_quests_updated', handleQuestsUpdated);
-      window.removeEventListener('storage', handleQuestsUpdated);
     };
   }, []);
 
@@ -75,7 +71,6 @@ export default function QuestsPage() {
           ...q,
           subtasks,
           progressPct: newPct,
-          progress: newPct,
           progressLabel: `${newPct}% (${doneCount}/${subtasks.length})`,
           status: newPct === 100 ? 'COMPLETED' : 'ACTIVE',
         };
@@ -95,7 +90,6 @@ export default function QuestsPage() {
           ...q,
           subtasks: updatedSubtasks,
           progressPct: 100,
-          progress: 100,
           progressLabel: `100% (${updatedSubtasks.length}/${updatedSubtasks.length})`,
           status: 'COMPLETED',
           completed: true,
@@ -122,7 +116,6 @@ export default function QuestsPage() {
           ...q,
           subtasks: updatedSubtasks,
           progressPct: 0,
-          progress: 0,
           progressLabel: `0% (0/${updatedSubtasks.length})`,
           status: 'ACTIVE',
           completed: false,
@@ -147,20 +140,11 @@ export default function QuestsPage() {
   };
 
   const tabCounts = {
-    active: quests.filter((q) => (q.progressPct ?? q.progress ?? 0) < 100).length,
-    daily: quests.filter((q) => {
-      const d = String(q.domain || '').toUpperCase();
-      return d === 'FITNESS' || d === 'READING' || d === 'HEALTH' || d === 'MEDITATION';
-    }).length,
-    weekly: quests.filter((q) => {
-      const d = String(q.domain || '').toUpperCase();
-      return d === 'PROGRAMMING' || d === 'CODE' || d === 'FINANCE' || d === 'CAREER';
-    }).length,
-    epic: quests.filter((q) => {
-      const diff = String(q.difficulty || '').toUpperCase();
-      return diff === 'HARD' || diff === 'EPIC';
-    }).length,
-    completed: quests.filter((q) => (q.progressPct ?? q.progress ?? 0) === 100).length,
+    active: quests.filter((q) => q.progressPct < 100).length,
+    daily: quests.filter((q) => q.domain === 'FITNESS' || q.domain === 'READING').length,
+    weekly: quests.filter((q) => q.domain === 'PROGRAMMING' || q.domain === 'FINANCE').length,
+    epic: quests.filter((q) => q.difficulty === 'HARD').length,
+    completed: quests.filter((q) => q.progressPct === 100).length,
   };
 
   const tabs = [
@@ -172,88 +156,26 @@ export default function QuestsPage() {
   ];
 
   const filteredQuests = quests.filter((q) => {
-    const prog = q.progressPct ?? q.progress ?? 0;
-    const d = String(q.domain || '').toUpperCase();
-    const diff = String(q.difficulty || '').toUpperCase();
-    if (activeTab === 'active') return prog < 100;
-    if (activeTab === 'daily') return d === 'FITNESS' || d === 'READING' || d === 'HEALTH' || d === 'MEDITATION';
-    if (activeTab === 'weekly') return d === 'PROGRAMMING' || d === 'CODE' || d === 'FINANCE' || d === 'CAREER';
-    if (activeTab === 'epic') return diff === 'HARD' || diff === 'EPIC';
-    if (activeTab === 'completed') return prog === 100;
+    if (activeTab === 'active') return q.progressPct < 100;
+    if (activeTab === 'daily') return q.domain === 'FITNESS' || q.domain === 'READING';
+    if (activeTab === 'weekly') return q.domain === 'PROGRAMMING' || q.domain === 'FINANCE';
+    if (activeTab === 'epic') return q.difficulty === 'HARD';
+    if (activeTab === 'completed') return q.progressPct === 100;
     return true;
   });
 
-  const diffOrder = { EPIC: 4, HARD: 3, MEDIUM: 2, EASY: 1 };
+  const diffOrder = { HARD: 3, MEDIUM: 2, EASY: 1 };
 
   const displayedQuests = [...filteredQuests].sort((a, b) => {
-    const aXp = a.rewardXp ?? a.xp ?? 0;
-    const bXp = b.rewardXp ?? b.xp ?? 0;
-    const aGold = a.rewardGold ?? a.gold ?? 0;
-    const bGold = b.rewardGold ?? b.gold ?? 0;
-    const aProg = a.progressPct ?? a.progress ?? 0;
-    const bProg = b.progressPct ?? b.progress ?? 0;
-    const aDiff = String(a.difficulty || '').toUpperCase();
-    const bDiff = String(b.difficulty || '').toUpperCase();
-
-    if (sortBy === 'xp-desc') return bXp - aXp;
-    if (sortBy === 'gold-desc') return bGold - aGold;
-    if (sortBy === 'progress-desc') return bProg - aProg;
-    if (sortBy === 'progress-asc') return aProg - bProg;
-    if (sortBy === 'difficulty') return (diffOrder[bDiff] || 0) - (diffOrder[aDiff] || 0);
+    if (sortBy === 'xp-desc') return b.rewardXp - a.rewardXp;
+    if (sortBy === 'gold-desc') return b.rewardGold - a.rewardGold;
+    if (sortBy === 'progress-desc') return b.progressPct - a.progressPct;
+    if (sortBy === 'progress-asc') return a.progressPct - b.progressPct;
+    if (sortBy === 'difficulty') return (diffOrder[b.difficulty] || 0) - (diffOrder[a.difficulty] || 0);
     return 0;
   });
 
   const selectedSortOption = SORT_OPTIONS.find((s) => s.key === sortBy) || SORT_OPTIONS[0];
-
-  // Dynamic Domain Overview stats
-  const domainsSummary = useMemo(() => {
-    const initialDomains = [
-      { name: 'Fitness', icon: 'fitness_center', color: '#10b981', current: 0, total: 0 },
-      { name: 'Programming', icon: 'code', color: '#6366f1', current: 0, total: 0 },
-      { name: 'Finance', icon: 'payments', color: '#f59e0b', current: 0, total: 0 },
-      { name: 'Reading', icon: 'auto_stories', color: '#3b82f6', current: 0, total: 0 },
-      { name: 'Mind', icon: 'psychology', color: '#ec4899', current: 0, total: 0 },
-      { name: 'Career', icon: 'work', color: '#854d0e', current: 0, total: 0 },
-    ];
-
-    const map = {};
-    initialDomains.forEach((d) => {
-      map[d.name.toUpperCase()] = { ...d };
-    });
-
-    quests.forEach((q) => {
-      const dKey = String(q.domain || 'GENERAL').toUpperCase();
-      const matchedKey =
-        dKey === 'CODE'
-          ? 'PROGRAMMING'
-          : dKey === 'HEALTH' || dKey === 'SPORTS'
-          ? 'FITNESS'
-          : dKey === 'MEDITATION'
-          ? 'MIND'
-          : dKey;
-
-      if (!map[matchedKey]) {
-        map[matchedKey] = {
-          name: q.domain || 'General',
-          icon: q.icon || 'star',
-          color: '#6366f1',
-          current: 0,
-          total: 0,
-        };
-      }
-      map[matchedKey].total += 1;
-      if ((q.progressPct ?? q.progress ?? 0) === 100) {
-        map[matchedKey].current += 1;
-      }
-    });
-
-    return Object.values(map).filter((d) => d.total > 0 || initialDomains.some((id) => id.name === d.name)).slice(0, 6);
-  }, [quests]);
-
-  const completedQuestsCount = quests.filter((q) => (q.progressPct ?? q.progress ?? 0) === 100).length;
-  const totalQuestsCount = quests.length || 1;
-  const questMasteryPct = Math.round((completedQuestsCount / totalQuestsCount) * 100);
-  const remainingForReward = Math.max(0, totalQuestsCount - completedQuestsCount);
 
   return (
     <div className="quests-page-container">
@@ -363,184 +285,169 @@ export default function QuestsPage() {
                 <p className="text-xs text-slate-400">There are no quests under this tab.</p>
               </div>
             ) : (
-              displayedQuests.map((quest) => {
-                const subtasks = Array.isArray(quest.subtasks) ? quest.subtasks : [];
-                const xpReward = quest.rewardXp ?? quest.xp ?? 100;
-                const goldReward = quest.rewardGold ?? quest.gold ?? 50;
-                const timeStr = quest.time || quest.duration || '30m';
-                const iconBg = quest.iconBg || '#ede9fe';
-                const iconColor = quest.iconColor || '#6366f1';
-                const domainColor = quest.domainColor || 'blue';
-                const diffColor = quest.diffColor || 'amber';
-                const progressPct = quest.progressPct ?? quest.progress ?? 0;
-                const progressLabel =
-                  quest.progressLabel ||
-                  `${progressPct}% (${subtasks.filter((s) => s.done).length}/${subtasks.length})`;
+              displayedQuests.map((quest) => (
+                <div
+                  key={quest.id}
+                  className="quest-feed-card"
+                  style={{ zIndex: openMenuQuestId === quest.id ? 30 : 1, position: 'relative' }}
+                >
+                  {/* Left Section: Icon & Content */}
+                  <div className="quest-card-left">
+                    <div
+                      className="quest-card-icon-box"
+                      style={{ background: quest.iconBg, color: quest.iconColor }}
+                    >
+                      <span className="material-symbols-outlined text-[24px]">
+                        {quest.icon}
+                      </span>
+                    </div>
 
-                return (
-                  <div
-                    key={quest.id}
-                    className="quest-feed-card"
-                    style={{ zIndex: openMenuQuestId === quest.id ? 30 : 1, position: 'relative' }}
-                  >
-                    {/* Left Section: Icon & Content */}
-                    <div className="quest-card-left">
-                      <div
-                        className="quest-card-icon-box"
-                        style={{ background: iconBg, color: iconColor }}
-                      >
-                        <span className="material-symbols-outlined text-[24px]">
-                          {quest.icon || 'star'}
+                    <div className="quest-card-content">
+                      {/* Tags */}
+                      <div className="quest-card-tags">
+                        <span className={`dash-chip dash-chip-${quest.domainColor}`}>
+                          {quest.domain}
+                        </span>
+                        <span className={`dash-chip dash-chip-${quest.diffColor}`}>
+                          <span className="material-symbols-outlined text-[11px]">bolt</span>
+                          {quest.difficulty}
+                        </span>
+                        <span className="text-[11px] font-bold text-[#64748b] flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[13px]">schedule</span>
+                          {quest.time}
                         </span>
                       </div>
 
-                      <div className="quest-card-content">
-                        {/* Tags */}
-                        <div className="quest-card-tags">
-                          <span className={`dash-chip dash-chip-${domainColor}`}>
-                            {quest.domain || 'GENERAL'}
-                          </span>
-                          <span className={`dash-chip dash-chip-${diffColor}`}>
-                            <span className="material-symbols-outlined text-[11px]">bolt</span>
-                            {quest.difficulty || 'MEDIUM'}
-                          </span>
-                          <span className="text-[11px] font-bold text-[#64748b] flex items-center gap-1">
-                            <span className="material-symbols-outlined text-[13px]">schedule</span>
-                            {timeStr}
-                          </span>
-                        </div>
+                      {/* Title */}
+                      <h3 className="quest-card-title">{quest.title}</h3>
 
-                        {/* Title */}
-                        <h3 className="quest-card-title">{quest.title}</h3>
-
-                        {/* Subtasks Checklist */}
-                        <div className="quest-subtasks-list">
-                          {subtasks.map((st) => (
-                            <div
-                              key={st.id}
-                              onClick={() => toggleSubtask(quest.id, st.id)}
-                              className="quest-subtask-item"
-                            >
-                              <div
-                                className={`quest-subtask-checkbox ${
-                                  st.done ? 'checked' : ''
-                                }`}
-                              >
-                                {st.done && (
-                                  <span className="material-symbols-outlined text-[11px]">
-                                    check
-                                  </span>
-                                )}
-                              </div>
-                              <span
-                                className={`quest-subtask-text ${
-                                  st.done ? 'checked' : ''
-                                }`}
-                              >
-                                {st.text}
-                              </span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Right Section: Progress & Action */}
-                    <div className="quest-card-right">
-                      <div className="quest-menu-wrapper">
-                        <button
-                          type="button"
-                          className={`quest-menu-btn ${openMenuQuestId === quest.id ? 'active' : ''}`}
-                          title="More options"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setOpenMenuQuestId(openMenuQuestId === quest.id ? null : quest.id);
-                          }}
-                        >
-                          <span className="material-symbols-outlined text-[18px]">more_vert</span>
-                        </button>
-
-                        {openMenuQuestId === quest.id && (
-                          <div className="quest-actions-menu">
-                            <Link
-                              to={`/quests/${quest.id}`}
-                              className="quest-action-item"
-                              onClick={() => setOpenMenuQuestId(null)}
-                            >
-                              <span className="material-symbols-outlined text-[16px]">visibility</span>
-                              <span>View Details</span>
-                            </Link>
-                            <Link
-                              to={`/quests/${quest.id}/edit`}
-                              className="quest-action-item"
-                              onClick={() => setOpenMenuQuestId(null)}
-                            >
-                              <span className="material-symbols-outlined text-[16px]">edit</span>
-                              <span>Edit Quest</span>
-                            </Link>
-                            {progressPct < 100 ? (
-                              <button
-                                type="button"
-                                className="quest-action-item"
-                                style={{ color: '#059669' }}
-                                onClick={() => handleMarkComplete(quest)}
-                              >
-                                <span className="material-symbols-outlined text-[16px]">check_circle</span>
-                                <span>Mark Complete</span>
-                              </button>
-                            ) : (
-                              <button
-                                type="button"
-                                className="quest-action-item"
-                                onClick={() => handleResetProgress(quest)}
-                              >
-                                <span className="material-symbols-outlined text-[16px]">restart_alt</span>
-                                <span>Reset Progress</span>
-                              </button>
-                            )}
-                            <div className="quest-action-divider" />
-                            <button
-                              type="button"
-                              className="quest-action-item danger"
-                              onClick={() => handleDeleteQuest(quest)}
-                            >
-                              <span className="material-symbols-outlined text-[16px]">delete</span>
-                              <span>Delete Quest</span>
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="quest-card-progress-section">
-                        <div className="quest-card-progress-header">
-                          <span className="quest-card-progress-lbl">Progress</span>
-                          <span className="quest-card-progress-val">
-                            {progressLabel}
-                          </span>
-                        </div>
-                        <div className="quest-card-track">
+                      {/* Subtasks Checklist */}
+                      <div className="quest-subtasks-list">
+                        {quest.subtasks.map((st) => (
                           <div
-                            className="quest-card-fill"
-                            style={{ width: `${progressPct}%` }}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between w-full mt-1">
-                        <div className="quest-card-badges-row">
-                          <span className="mission-pill-xp">+{xpReward} XP</span>
-                          <span className="mission-pill-gold">+{goldReward} Gold</span>
-                        </div>
-
-                        <Link to={`/quests/${quest.id}`} className="quest-btn-continue">
-                          <span className="material-symbols-outlined text-[10px]">play_arrow</span>
-                          <span>Continue</span>
-                        </Link>
+                            key={st.id}
+                            onClick={() => toggleSubtask(quest.id, st.id)}
+                            className="quest-subtask-item"
+                          >
+                            <div
+                              className={`quest-subtask-checkbox ${
+                                st.done ? 'checked' : ''
+                              }`}
+                            >
+                              {st.done && (
+                                <span className="material-symbols-outlined text-[11px]">
+                                  check
+                                </span>
+                              )}
+                            </div>
+                            <span
+                              className={`quest-subtask-text ${
+                                st.done ? 'checked' : ''
+                              }`}
+                            >
+                              {st.text}
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     </div>
                   </div>
-                );
-              })
+
+                  {/* Right Section: Progress & Action */}
+                  <div className="quest-card-right">
+                    <div className="quest-menu-wrapper">
+                      <button
+                        type="button"
+                        className={`quest-menu-btn ${openMenuQuestId === quest.id ? 'active' : ''}`}
+                        title="More options"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOpenMenuQuestId(openMenuQuestId === quest.id ? null : quest.id);
+                        }}
+                      >
+                        <span className="material-symbols-outlined text-[18px]">more_vert</span>
+                      </button>
+
+                      {openMenuQuestId === quest.id && (
+                        <div className="quest-actions-menu">
+                          <Link
+                            to={`/quests/${quest.id}`}
+                            className="quest-action-item"
+                            onClick={() => setOpenMenuQuestId(null)}
+                          >
+                            <span className="material-symbols-outlined text-[16px]">visibility</span>
+                            <span>View Details</span>
+                          </Link>
+                          <Link
+                            to={`/quests/${quest.id}/edit`}
+                            className="quest-action-item"
+                            onClick={() => setOpenMenuQuestId(null)}
+                          >
+                            <span className="material-symbols-outlined text-[16px]">edit</span>
+                            <span>Edit Quest</span>
+                          </Link>
+                          {quest.progressPct < 100 ? (
+                            <button
+                              type="button"
+                              className="quest-action-item"
+                              style={{ color: '#059669' }}
+                              onClick={() => handleMarkComplete(quest)}
+                            >
+                              <span className="material-symbols-outlined text-[16px]">check_circle</span>
+                              <span>Mark Complete</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              className="quest-action-item"
+                              onClick={() => handleResetProgress(quest)}
+                            >
+                              <span className="material-symbols-outlined text-[16px]">restart_alt</span>
+                              <span>Reset Progress</span>
+                            </button>
+                          )}
+                          <div className="quest-action-divider" />
+                          <button
+                            type="button"
+                            className="quest-action-item danger"
+                            onClick={() => handleDeleteQuest(quest)}
+                          >
+                            <span className="material-symbols-outlined text-[16px]">delete</span>
+                            <span>Delete Quest</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="quest-card-progress-section">
+                      <div className="quest-card-progress-header">
+                        <span className="quest-card-progress-lbl">Progress</span>
+                        <span className="quest-card-progress-val">
+                          {quest.progressLabel}
+                        </span>
+                      </div>
+                      <div className="quest-card-track">
+                        <div
+                          className="quest-card-fill"
+                          style={{ width: `${quest.progressPct}%` }}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between w-full mt-1">
+                      <div className="quest-card-badges-row">
+                        <span className="mission-pill-xp">+{quest.rewardXp} XP</span>
+                        <span className="mission-pill-gold">+{quest.rewardGold} Gold</span>
+                      </div>
+
+                      <Link to={`/quests/${quest.id}`} className="quest-btn-continue">
+                        <span className="material-symbols-outlined text-[10px]">play_arrow</span>
+                        <span>Continue</span>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))
             )}
           </div>
         </div>
@@ -572,21 +479,17 @@ export default function QuestsPage() {
                     strokeLinecap="round"
                     strokeWidth="6.5"
                     strokeDasharray={2 * Math.PI * 32}
-                    strokeDashoffset={2 * Math.PI * 32 * (1 - Math.min(1, questMasteryPct / 100))}
+                    strokeDashoffset={2 * Math.PI * 32 * (1 - 4 / 10)}
                   />
                 </svg>
-                <span className="absolute quests-donut-val">
-                  {completedQuestsCount}/{totalQuestsCount}
-                </span>
+                <span className="absolute quests-donut-val">4/10</span>
               </div>
 
               {/* Info */}
               <div className="quests-mastery-info">
                 <span className="quests-mastery-label">Quests Completed</span>
                 <p className="quests-mastery-sub">
-                  {remainingForReward > 0
-                    ? `Complete ${remainingForReward} more to unlock the next reward!`
-                    : 'All quests in this cycle completed! Forge new ones to level up!'}
+                  Complete 6 more to unlock the next reward!
                 </p>
               </div>
 
@@ -612,8 +515,8 @@ export default function QuestsPage() {
             </div>
 
             <div className="flex flex-col gap-3">
-              {domainsSummary.map((dom) => {
-                const pct = dom.total > 0 ? Math.round((dom.current / dom.total) * 100) : 0;
+              {DOMAINS_SUMMARY.map((dom) => {
+                const pct = Math.round((dom.current / dom.total) * 100);
                 return (
                   <div key={dom.name} className="quests-domain-item-row">
                     <div className="quests-domain-item-left">
