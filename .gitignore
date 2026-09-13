@@ -1,6 +1,26 @@
-.tools/
-*.zip
-data/
+# Node & Build artifacts
+node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Java / Maven
 target/
-.env.local
+*.jar
+*.war
+
+# Logs & Tools
+*.log
+.tools/
+data/
+
+# IDEs & System
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 .DS_Store
+Thumbs.db
