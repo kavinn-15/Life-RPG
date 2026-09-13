@@ -2,10 +2,6 @@ package com.liferpg.controller;
 
 import com.liferpg.dto.common.ApiResponse;
 import com.liferpg.dto.quest.*;
-import com.liferpg.entity.Character;
-import com.liferpg.enums.QuestStatus;
-import com.liferpg.enums.QuestType;
-import com.liferpg.repository.CharacterRepository;
 import com.liferpg.security.UserPrincipal;
 import com.liferpg.service.LeaderboardService;
 import com.liferpg.service.QuestService;
@@ -27,14 +23,11 @@ public class QuestController {
 
     private final QuestService questService;
     private final LeaderboardService leaderboardService;
-    private final CharacterRepository characterRepository;
 
     public QuestController(QuestService questService,
-                           LeaderboardService leaderboardService,
-                           CharacterRepository characterRepository) {
+                           LeaderboardService leaderboardService) {
         this.questService = questService;
         this.leaderboardService = leaderboardService;
-        this.characterRepository = characterRepository;
     }
 
     @GetMapping

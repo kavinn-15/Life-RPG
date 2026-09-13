@@ -1,8 +1,6 @@
 package com.liferpg.service;
 
 import com.liferpg.dto.achievement.AchievementResponseDTO;
-import com.liferpg.dto.domain.DomainCreateRequestDTO;
-import com.liferpg.dto.domain.DomainQuestDTO;
 import com.liferpg.dto.domain.DomainResponseDTO;
 import com.liferpg.dto.domain.DomainStatsDTO;
 import com.liferpg.entity.Domain;

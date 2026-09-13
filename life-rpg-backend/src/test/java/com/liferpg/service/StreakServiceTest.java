@@ -36,7 +36,7 @@ class StreakServiceTest {
     @BeforeEach
     void setUp() {
         streakService = new StreakService(streakLogRepository, characterRepository);
-        user = new User("alex@liferpg.app", "hash", "Alex Mercer", UserRole.USER);
+        user = new User("testplayer@liferpg.app", "hash", "Test Player", UserRole.USER);
         user.setId(1L);
         character = new Character(user);
         character.setCurrentStreak(5);

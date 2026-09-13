@@ -2,7 +2,6 @@ package com.liferpg.repository;
 
 import com.liferpg.entity.Quest;
 import com.liferpg.entity.User;
-import com.liferpg.enums.QuestDifficulty;
 import com.liferpg.enums.QuestStatus;
 import com.liferpg.enums.QuestType;
 import org.springframework.data.domain.Page;

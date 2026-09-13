@@ -228,27 +228,109 @@ export async function getQuestById(id) {
 
 // POST /api/quests
 export async function createQuest(data) {
+  const domainKey = (data.domain || 'FITNESS').toUpperCase();
+  const diffKey = (data.difficulty || 'MEDIUM').toUpperCase();
+
+  const domainColors = {
+    FITNESS: 'green',
+    HEALTH: 'green',
+    SPORTS: 'green',
+    PROGRAMMING: 'blue',
+    CODE: 'blue',
+    FINANCE: 'amber',
+    READING: 'blue',
+    MIND: 'pink',
+    CAREER: 'amber',
+    CREATIVITY: 'pink',
+    EDUCATION: 'blue',
+    MEDITATION: 'amber',
+    TRAVEL: 'green',
+    SOCIAL: 'pink',
+    GAMING: 'pink',
+  };
+  const diffColors = {
+    EASY: 'green',
+    MEDIUM: 'amber',
+    HARD: 'red',
+    EPIC: 'red',
+  };
+
+  const domainColor = data.domainColor || domainColors[domainKey] || 'blue';
+  const diffColor = data.diffColor || diffColors[diffKey] || 'amber';
+
+  const xpVal = Number(data.rewardXp ?? data.xp ?? 100);
+  const goldVal = Number(data.rewardGold ?? data.gold ?? 50);
+  const timeVal = data.time || data.duration || '30m';
+
+  const subtasks =
+    data.subtasks && Array.isArray(data.subtasks) && data.subtasks.length > 0
+      ? data.subtasks
+      : [
+          { id: 1, text: data.title || 'Complete quest objective', done: false },
+          { id: 2, text: 'Log reflections and confirm completion', done: false },
+        ];
+
+  const doneCount = subtasks.filter((st) => st.done).length;
+  const progressPct =
+    data.progressPct ??
+    data.progress ??
+    (subtasks.length ? Math.round((doneCount / subtasks.length) * 100) : 0);
+
   const newQuest = {
     ...data,
     id: data.id || `quest-${Date.now()}`,
-    progressPct: data.progress || 0,
-    sprintPct: data.progress || 0,
-    subtasks: data.subtasks || data.milestones || [{ id: 1, text: 'Start quest', done: false }],
+    title: data.title || 'Untitled Quest',
+    domain: domainKey,
+    domainColor,
+    difficulty: diffKey,
+    diffColor,
+    time: timeVal,
+    duration: timeVal,
+    rewardXp: xpVal,
+    xp: xpVal,
+    rewardGold: goldVal,
+    gold: goldVal,
+    icon: data.icon || 'star',
+    iconBg: data.iconBg || '#ede9fe',
+    iconColor: data.iconColor || '#6366f1',
+    progressPct,
+    progress: progressPct,
+    progressLabel: data.progressLabel || `${progressPct}% (${doneCount}/${subtasks.length})`,
+    subtasks,
+    status: data.status || (progressPct === 100 ? 'COMPLETED' : 'ACTIVE'),
   };
+
   const list = [newQuest, ...getStoredQuests()];
   saveStoredQuests(list);
 
   try {
-    return await api.post('/quests', data);
-  } catch {
-    return newQuest;
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('liferpg_quests_updated', { detail: newQuest }));
+    }
+  } catch (e) {
+    console.warn('Could not dispatch liferpg_quests_updated event:', e);
   }
+
+  try {
+    const res = await api.post('/quests', newQuest);
+    if (res && res.id) return { ...newQuest, ...res };
+  } catch (err) {
+    console.warn('API createQuest failed, saved locally:', err);
+  }
+
+  return newQuest;
 }
 
 // PATCH /api/quests/:id
 export async function updateQuest(id, data) {
   const list = getStoredQuests().map((q) => (q.id === id ? { ...q, ...data } : q));
   saveStoredQuests(list);
+
+  try {
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('liferpg_quests_updated', { detail: data }));
+    }
+  } catch {}
 
   try {
     return await api.patch(`/quests/${id}`, data);

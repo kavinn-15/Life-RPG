@@ -72,6 +72,7 @@ export default function App() {
             <Route path="quests/:id/edit" element={<EditQuestPage />} />
             <Route path="quests/:id" element={<QuestDetailsPage />} />
             <Route path="character" element={<CharacterPage />} />
+            <Route path="characters" element={<CharacterPage />} />
             <Route path="domains" element={<DomainsPage />} />
             <Route path="domains/:domainId" element={<DomainDetailsPage />} />
             <Route path="daily-missions" element={<DailyMissionsPage />} />

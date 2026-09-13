@@ -1,6 +1,5 @@
 package com.liferpg.entity;
 
-import com.liferpg.enums.QuestDifficulty;
 import com.liferpg.enums.QuestStatus;
 import com.liferpg.enums.QuestType;
 import jakarta.persistence.*;
